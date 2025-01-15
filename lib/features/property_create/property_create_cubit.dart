@@ -9,9 +9,7 @@ part 'property_create_state.dart';
 class PropertyCreateCubit extends Cubit<PropertyCreateState> {
   PropertyCreateCubit() : super(PropertyCreateStateInitial());
 
-  final _collectionRef = FirebaseFirestore.instance
-      .collection('properties')
-      .withConverter<Property>(
+  final _collectionRef = FirebaseFirestore.instance.collection('properties').withConverter<Property>(
         fromFirestore: (snapshot, _) {
           final data = snapshot.data()!;
           return Property.fromJson({
@@ -33,13 +31,14 @@ class PropertyCreateCubit extends Cubit<PropertyCreateState> {
   List<Job> get jobs => _jobs;
   int get jobCount => _jobs.length;
 
-  bool addJob(String name, String description) {
+  bool addJob({required String name, required String description, String estimatedHours = "0"}) {
     if (name.isEmpty || description.isEmpty) return false;
     Job job = Job(
       id: jobCount,
       name: name,
       description: description,
       tools: [],
+      estimatedHours: double.parse(estimatedHours),
     );
     for (var i in items) {
       if (i["isActive"]) {
@@ -57,7 +56,6 @@ class PropertyCreateCubit extends Cubit<PropertyCreateState> {
     required String name,
     required String lat,
     required String lon,
-    required String estDuration,
     required String estWoolsacks,
     required String difficulty,
   }) async {
@@ -65,8 +63,9 @@ class PropertyCreateCubit extends Cubit<PropertyCreateState> {
       name: name,
       location: GeoPoint(double.parse(lat), double.parse(lon)),
       dateCreated: DateTime.now(),
+      estimatedWoolsacks: double.parse(estWoolsacks),
       difficulty: int.parse(difficulty),
-      photos: [],
+      photos: [(MediaItem(id: 0, path: "")), (MediaItem(id: 1, path: ""))],
       jobs: _jobs,
     );
 

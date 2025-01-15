@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:wedolawns/objects/objects.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:wedolawns/objects/objects.dart';
+import 'package:wedolawns/utils/double_utils.dart';
 
 part 'property.g.dart';
 
@@ -13,9 +14,8 @@ class Property {
   final String? id;
   @JsonKey(name: "Name")
   final String name;
-  @JsonKey(
-      name: "Location", fromJson: _geoPointFromJson, toJson: _geoPointToJson)
-  final GeoPoint location;
+  @JsonKey(name: "Location", fromJson: _geoPointFromJson, toJson: _geoPointToJson)
+  GeoPoint location;
   @JsonKey(name: "Jobs")
   final List<Job> jobs;
   @JsonKey(name: "DateCreated")
@@ -27,27 +27,27 @@ class Property {
   }
 
   @JsonKey(name: "DateFinished")
-  final DateTime? dateFinished;
+  DateTime? dateFinished;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get dateFinishedString {
     if (dateFinished == null) return "N/A";
     return dateFormat.format(dateFinished!);
   }
 
-  @JsonKey(name: "EstimatedHours")
-  final double? estimatedHours;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get estimatedHoursString {
-    if (estimatedHours == null) return "N/A";
-    return estimatedHours!.toStringAsFixed(0);
+    double totalHours = jobs.fold(0.0, (sum, job) => sum + (job.estimatedHours ?? 0 as num));
+
+    if (totalHours == 0) return "N/A";
+    return totalHours.formatWithOptionalDecimal();
   }
 
   @JsonKey(name: "HoursWorked")
-  final double? hoursWorked;
+  double? hoursWorked;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get hoursWorkedString {
     if (hoursWorked == null) return "N/A";
-    return hoursWorked!.toStringAsFixed(0);
+    return hoursWorked!.formatWithOptionalDecimal();
   }
 
   @JsonKey(name: "EstimatedWoolsacks")
@@ -55,27 +55,29 @@ class Property {
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get estimatedWoolsacksString {
     if (estimatedWoolsacks == null) return "N/A";
-    return estimatedWoolsacks!.toStringAsFixed(0);
+    return estimatedWoolsacks!.formatWithOptionalDecimal();
   }
 
   @JsonKey(name: "ActualWoolsacks")
-  final double? actualWoolsacks;
+  double? actualWoolsacks;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get actualWoolsacksString {
     if (actualWoolsacks == null) return "N/A";
-    return actualWoolsacks!.toStringAsFixed(0);
+    return actualWoolsacks!.formatWithOptionalDecimal();
   }
 
   @JsonKey(name: "Difficulty")
   final int difficulty;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get difficultyString {
-    if (difficulty == null) return "N/A";
-    return difficulty!.toStringAsFixed(0);
+    return difficulty.toStringAsFixed(0);
   }
 
   @JsonKey(name: "Photos")
   final List<MediaItem> photos;
+
+  @JsonKey(name: "YoutubeUrl", defaultValue: "")
+  String youtubeUrl;
 
   String get description {
     return "${jobs.length} Job${jobs.length > 1 ? "s" : ""}";
@@ -90,18 +92,16 @@ class Property {
     required this.difficulty,
     required this.photos,
     required this.jobs,
-    this.estimatedHours,
     this.hoursWorked,
     this.estimatedWoolsacks,
     this.actualWoolsacks,
+    this.youtubeUrl = "",
   });
 
-  factory Property.fromJson(Map<String, dynamic> json) =>
-      _$PropertyFromJson(json);
+  factory Property.fromJson(Map<String, dynamic> json) => _$PropertyFromJson(json);
   Map<String, dynamic> toJson() => _$PropertyToJson(this);
 
-  static GeoPoint _geoPointFromJson(Map<String, dynamic> json) =>
-      GeoPoint(json['latitude'], json['longitude']);
+  static GeoPoint _geoPointFromJson(Map<String, dynamic> json) => GeoPoint(json['latitude'], json['longitude']);
 
   static Map<String, dynamic> _geoPointToJson(GeoPoint geoPoint) => {
         'latitude': geoPoint.latitude,

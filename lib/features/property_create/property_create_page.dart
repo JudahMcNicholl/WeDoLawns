@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wedolawns/features/property/property_cubit.dart';
-import 'package:intl/intl.dart';
-import 'package:wedolawns/widgets/create_job_dialog.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:wedolawns/features/property_create/property_create_cubit.dart';
 import 'package:wedolawns/objects/objects.dart';
+import 'package:wedolawns/widgets/add_job_dialog.dart';
 import 'package:wedolawns/widgets/job_item.dart';
 
 class PropertyCreatePage extends StatefulWidget {
@@ -25,7 +24,6 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
   final TextEditingController _latController = TextEditingController();
   final TextEditingController _lonController = TextEditingController();
 
-  final TextEditingController _estDurationController = TextEditingController();
   final TextEditingController _estWoolsackController = TextEditingController();
 
   @override
@@ -35,7 +33,6 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
     _latController.text = '0';
     _lonController.text = '0';
 
-    _estDurationController.text = '0';
     _estWoolsackController.text = '0';
 
     _difficultyController.text = '0';
@@ -81,8 +78,7 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                               padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                               child: TextFormField(
                                 controller: _addressController,
-                                textCapitalization:
-                                    TextCapitalization.sentences,
+                                textCapitalization: TextCapitalization.sentences,
                                 textInputAction: TextInputAction.next,
                                 decoration: InputDecoration(
                                   labelText: "Address",
@@ -97,61 +93,71 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                             ),
                             Padding(
                               padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _latController,
-                                      textInputAction: TextInputAction.next,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        labelText: "Lat",
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).pushNamed("/location").then((value) {
+                                    if (value is LatLng) {
+                                      setState(() {
+                                        _latController.text = value.latitude.toString();
+                                        _lonController.text = value.longitude.toString();
+                                      });
+                                    }
+                                  });
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        enabled: false,
+                                        controller: _latController,
+                                        textInputAction: TextInputAction.next,
+                                        keyboardType: TextInputType.number,
+                                        decoration: InputDecoration(
+                                          labelText: "Lat",
+                                        ),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Required";
+                                          }
+                                          return null;
+                                        },
                                       ),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return "Required";
-                                        }
-                                        return null;
-                                      },
                                     ),
-                                  ),
-                                  SizedBox(
-                                      width:
-                                          10), // Add space between TextFields
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _lonController,
-                                      textInputAction: TextInputAction.next,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        labelText: "Lon",
+                                    SizedBox(width: 10), // Add space between TextFields
+                                    Expanded(
+                                      child: TextFormField(
+                                        enabled: false,
+                                        controller: _lonController,
+                                        textInputAction: TextInputAction.next,
+                                        keyboardType: TextInputType.number,
+                                        decoration: InputDecoration(
+                                          labelText: "Lon",
+                                        ),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Required";
+                                          }
+                                          return null;
+                                        },
                                       ),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return "Required";
-                                        }
-                                        return null;
-                                      },
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                             Padding(
                               padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
                                   Expanded(
                                     child: TextFormField(
-                                      controller: _estDurationController,
-                                      textInputAction: TextInputAction.next,
+                                      controller: _difficultyController,
+                                      textInputAction: TextInputAction.done,
                                       keyboardType: TextInputType.number,
                                       decoration: InputDecoration(
-                                        labelText: "Est Duration",
+                                        labelText: "Difficulty",
                                       ),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
@@ -161,9 +167,7 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                       },
                                     ),
                                   ),
-                                  SizedBox(
-                                      width:
-                                          10), // Add space between TextFields
+                                  SizedBox(width: 10), // Add space between TextFields
                                   Expanded(
                                     child: TextFormField(
                                       controller: _estWoolsackController,
@@ -183,20 +187,6 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                 ],
                               ),
                             ),
-                            TextFormField(
-                              controller: _difficultyController,
-                              textInputAction: TextInputAction.done,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: "Difficulty",
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return "Required";
-                                }
-                                return null;
-                              },
-                            ),
                           ],
                         ),
                       ),
@@ -215,8 +205,8 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                 builder: (BuildContext context) {
                                   return AddJobDialog(
                                     items: _cubit.items,
-                                    onAddJob: (name, description) {
-                                      if (_cubit.addJob(name, description)) {
+                                    onAddJob: (name, description, estimatedHours) {
+                                      if (_cubit.addJob(name: name, description: description, estimatedHours: estimatedHours)) {
                                         setState(() {});
                                       }
                                     },
@@ -242,6 +232,7 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                     _cubit.removeJob(job);
                                   });
                                 },
+                                onEdit: () {},
                               );
                             },
                           ),
@@ -255,7 +246,6 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                               lat: _latController.text,
                               lon: _lonController.text,
                               difficulty: _difficultyController.text,
-                              estDuration: _estDurationController.text,
                               estWoolsacks: _estWoolsackController.text,
                             );
                           }

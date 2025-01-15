@@ -4,9 +4,11 @@ import 'package:wedolawns/objects/objects.dart';
 class JobItem extends StatelessWidget {
   final Job job;
   final Function onDelete;
+  final Function onEdit;
   const JobItem({
     required this.job,
     required this.onDelete,
+    required this.onEdit,
     super.key,
   });
 
@@ -27,24 +29,41 @@ class JobItem extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  job.name,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(job.description),
-                if (job.tools.isNotEmpty) ...[
-                  Text("Requires: ${job.tools.join(",")}"),
-                ]
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${job.name} (Est: ${job.estimatedHoursString})",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    job.description,
+                    maxLines: 3,
+                    softWrap: true,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (job.tools.isNotEmpty) ...[
+                    Text("Requires: ${job.tools.join(",")}"),
+                  ]
+                ],
+              ),
             ),
-            IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: () {
-                onDelete(job);
-              },
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    onEdit();
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    onDelete();
+                  },
+                ),
+              ],
             ),
           ],
         ),

@@ -19,6 +19,10 @@ dependencies:
   cloud_firestore: ^5.6.0
   firebase_auth: ^5.3.4
   build_runner: ^2.4.14
+  equatable: ^2.0.7
+  cached_network_image: ^3.4.1
+  google_maps_flutter: ^2.10.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
