@@ -520,58 +520,58 @@ class _PropertyPageState extends State<PropertyPage> {
                             border: Border.all(color: Colors.black, width: 2),
                           ),
                           child: item == null || item.path.isEmpty
-                              ? GestureDetector(
-                                  onTap: () async {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        TextEditingController controller = TextEditingController(text: item?.path);
-                                        return AlertDialog(
-                                          title: Text("Add Media"),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-                                                child: TextField(
-                                                  controller: controller,
-                                                  textInputAction: TextInputAction.done,
-                                                  decoration: InputDecoration(
-                                                    labelText: "Media url",
+                              ? Center(
+                                  child: IconButton(
+                                    onPressed: () async {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          TextEditingController controller = TextEditingController(text: item?.path);
+                                          return AlertDialog(
+                                            title: Text("Add Media"),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
+                                                  child: TextField(
+                                                    controller: controller,
+                                                    textInputAction: TextInputAction.done,
+                                                    decoration: InputDecoration(
+                                                      labelText: "Media url",
+                                                    ),
                                                   ),
                                                 ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop(false); // Close the dialog
+                                                },
+                                                child: Text("Cancel"),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  if (_cubit.addMedia(index: index, mediaUrl: controller.text)) {
+                                                    if (index == _cubit.property.photos.length - 2) {
+                                                      // Add two new items to the photos array
+                                                      _cubit.property.photos.add(MediaItem(id: _cubit.property.photos.length, path: ""));
+                                                      _cubit.property.photos.add(MediaItem(id: _cubit.property.photos.length, path: ""));
+                                                    }
+                                                    setState(() {});
+                                                  }
+
+                                                  Navigator.of(context).pop(true); // Close the dialog
+                                                },
+                                                child: Text("Add"),
                                               ),
                                             ],
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop(false); // Close the dialog
-                                              },
-                                              child: Text("Cancel"),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                if (_cubit.addMedia(index: index, mediaUrl: controller.text)) {
-                                                  if (index == _cubit.property.photos.length - 2) {
-                                                    // Add two new items to the photos array
-                                                    _cubit.property.photos.add(MediaItem(id: _cubit.property.photos.length, path: ""));
-                                                    _cubit.property.photos.add(MediaItem(id: _cubit.property.photos.length, path: ""));
-                                                  }
-                                                  setState(() {});
-                                                }
-
-                                                Navigator.of(context).pop(true); // Close the dialog
-                                              },
-                                              child: Text("Add"),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: Center(
-                                    child: Icon(
+                                          );
+                                        },
+                                      );
+                                    },
+                                    icon: Icon(
                                       Icons.add,
                                       color: Colors.white,
                                       size: 40,
@@ -580,12 +580,12 @@ class _PropertyPageState extends State<PropertyPage> {
                                 )
                               : GestureDetector(
                                   onTap: () {
+                                    _imageStreamController.add(index);
                                     showDialog(
                                       barrierColor: const Color.fromARGB(255, 41, 40, 40),
                                       context: context,
                                       builder: (BuildContext context) {
                                         return Dialog(
-                                          // key: widget.dialogKey,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(0.0),
                                             side: const BorderSide(color: Colors.black, width: 1),
@@ -635,14 +635,41 @@ class _PropertyPageState extends State<PropertyPage> {
                                       },
                                     );
                                   },
-                                  child: CachedNetworkImage(
-                                    imageUrl: item.path,
-                                    progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
-                                      width: 12,
-                                      height: 12,
-                                      child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
-                                    ),
-                                    errorWidget: (context, url, error) => Icon(Icons.error),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      CachedNetworkImage(
+                                        imageUrl: item.path,
+                                        progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
+                                          width: 12,
+                                          height: 12,
+                                          child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
+                                        ),
+                                        errorWidget: (context, url, error) => Icon(Icons.error),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.topRight,
+                                        child: IconButton(
+                                          onPressed: () {
+                                            if (_cubit.deleteMedia(index: index)) {
+                                              setState(() {});
+                                            }
+                                          },
+                                          icon: Icon(Icons.delete, color: const Color.fromARGB(255, 220, 67, 56)),
+                                        ),
+                                      ),
+                                      Align(
+                                        alignment: Alignment.topLeft,
+                                        child: IconButton(
+                                          onPressed: () {
+                                            if (_cubit.swapMedia(index: index)) {
+                                              setState(() {});
+                                            }
+                                          },
+                                          icon: Icon(Icons.swap_horiz, color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                         );

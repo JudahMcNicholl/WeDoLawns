@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:wedolawns/features/property_list/property_list_cubit.dart';
 import 'package:wedolawns/objects/property.dart';
@@ -41,6 +43,15 @@ class PropertyListPageState extends State<PropertyListPage> {
           },
           icon: Icon(_showMap ? Icons.list : Icons.map_outlined),
         ),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Phoenix.rebirth(context);
+            },
+            icon: Icon(Icons.logout),
+          ),
+        ],
       ),
       floatingActionButton: Builder(
         builder: (context) => FloatingActionButton(

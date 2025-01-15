@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:wedolawns/features/property/property_cubit.dart';
 import 'package:wedolawns/features/property/property_page.dart';
 import 'package:wedolawns/features/property_create/property_create_cubit.dart';
@@ -15,11 +17,7 @@ import 'package:wedolawns/widgets/select_location.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: null);
-  await FirebaseAuth.instance.signInWithEmailAndPassword(
-    email: 'judahmcnicholl@gmail.com',
-    password: 'G%YTG@#f24g',
-  );
-  runApp(const MyApp());
+  runApp(Phoenix(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -37,7 +35,9 @@ class MyApp extends StatelessWidget {
         ),
         inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
       ),
-      home: const MyHomePage(),
+      home: const LoaderOverlay(
+        child: MyHomePage(),
+      ),
       routes: {
         "/property_create": (context) => BlocProvider.value(
               value: PropertyCreateCubit(),
@@ -77,6 +77,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _obscureText = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,7 +91,131 @@ class _MyHomePageState extends State<MyHomePage> {
         providers: [
           BlocProvider.value(value: PropertyListCubit()),
         ],
-        child: PropertyListPage(),
+        child: FirebaseAuth.instance.currentUser == null
+            ? Scaffold(
+                appBar: AppBar(
+                  title: Text("Sign in"),
+                ),
+                body: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Form(
+                        key: _formKey,
+                        child: AutofillGroup(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                                child: TextFormField(
+                                  controller: _usernameController,
+                                  textInputAction: TextInputAction.next,
+                                  autofillHints: [AutofillHints.email],
+                                  decoration: InputDecoration(
+                                    labelText: "Username",
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "Required";
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                                child: TextFormField(
+                                  controller: _passwordController,
+                                  textInputAction: TextInputAction.next,
+                                  autofillHints: [AutofillHints.password, AutofillHints.newPassword],
+                                  decoration: InputDecoration(
+                                    labelText: "Password",
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscureText ? Icons.visibility_off : Icons.visibility,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscureText = !_obscureText;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  obscureText: _obscureText,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return "Required";
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      OutlinedButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            try {
+                              FocusManager.instance.primaryFocus?.unfocus();
+                              context.loaderOverlay.show();
+                              UserCredential credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                email: _usernameController.text,
+                                password: _passwordController.text,
+                              );
+                              context.loaderOverlay.hide();
+                              if (credential.user != null) {
+                                setState(() {});
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text("Oops"),
+                                      content: Text("Sign in credentials may be incorrect, try again"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(false); // Close the dialog
+                                          },
+                                          child: Text("Ok"),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }
+                            } on FirebaseAuthException catch (e) {
+                              context.loaderOverlay.hide();
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text("Oops"),
+                                    content: Text(e.message ?? ""),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(false); // Close the dialog
+                                        },
+                                        child: Text("Ok"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
+                          }
+                        },
+                        child: Text("Sign in"),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : PropertyListPage(),
       ),
     );
   }

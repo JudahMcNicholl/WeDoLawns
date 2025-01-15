@@ -102,7 +102,11 @@ class PropertyCubit extends Cubit<PropertyState> {
     if (mediaUrl.contains("youtube")) {
     } else {
       List<String> split = mediaUrl.split("/");
-      String id = split[split.length - 2];
+      int indexOf = split.indexOf("d");
+      for (String item in split) {
+        if (item == "d") {}
+      }
+      String id = split[indexOf + 1]; //The one after /d/
       String url = "https://drive.google.com/uc?export=download&id=$id";
       property.photos[index].path = url;
     }
@@ -127,5 +131,40 @@ class PropertyCubit extends Cubit<PropertyState> {
     property.youtubeUrl = youtubeUrl;
     _collectionRef.doc(property.id).set(property);
     return true;
+  }
+
+  bool deleteMedia({required int index}) {
+    property.photos[index].path = "";
+    if (index % 2 == 0) {
+      if (property.photos[index].path.isEmpty && property.photos[index + 1].path.isEmpty) {
+        if (property.photos.length > 2) {
+          property.photos.removeAt(index + 1);
+          property.photos.removeAt(index);
+        }
+      }
+    }
+
+    _collectionRef.doc(property.id).set(property);
+    return true;
+  }
+
+  bool swapMedia({required int index}) {
+    if (index % 2 == 0) {
+      swapItems(property.photos, index, index + 1);
+    } else {
+      swapItems(property.photos, index, index - 1);
+    }
+
+    return true;
+  }
+
+  void swapItems<T>(List<T> list, int index1, int index2) {
+    if (index1 < 0 || index2 < 0 || index1 >= list.length || index2 >= list.length) {
+      throw ArgumentError('Indices are out of bounds');
+    }
+
+    T temp = list[index1];
+    list[index1] = list[index2];
+    list[index2] = temp;
   }
 }
