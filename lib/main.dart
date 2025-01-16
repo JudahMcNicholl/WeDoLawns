@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:wedolawns/features/property/property_cubit.dart';
 import 'package:wedolawns/features/property/property_page.dart';
@@ -28,10 +29,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'We.Do.Lawns',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: "WeDoLawns",
+        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 36, 97, 3)),
         useMaterial3: true,
         appBarTheme: AppBarTheme(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          backgroundColor: Color.fromARGB(255, 36, 97, 3),
+          titleTextStyle: TextStyle(color: Colors.white, fontSize: 24),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Color.fromARGB(255, 36, 97, 3),
+          foregroundColor: Colors.white,
         ),
         inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
       ),
@@ -92,89 +100,122 @@ class _MyHomePageState extends State<MyHomePage> {
           BlocProvider.value(value: PropertyListCubit()),
         ],
         child: FirebaseAuth.instance.currentUser == null
-            ? Scaffold(
-                appBar: AppBar(
-                  title: Text("Sign in"),
-                ),
-                body: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Form(
-                        key: _formKey,
-                        child: AutofillGroup(
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                                child: TextFormField(
-                                  controller: _usernameController,
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: [AutofillHints.email],
-                                  decoration: InputDecoration(
-                                    labelText: "Username",
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return "Required";
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                                child: TextFormField(
-                                  controller: _passwordController,
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: [AutofillHints.password, AutofillHints.newPassword],
-                                  decoration: InputDecoration(
-                                    labelText: "Password",
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscureText ? Icons.visibility_off : Icons.visibility,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _obscureText = !_obscureText;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  obscureText: _obscureText,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return "Required";
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                            ],
+            ? SafeArea(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            height: MediaQuery.of(context).size.width * 0.5,
+                            child: SvgPicture.asset(
+                              "assets/icons/app_icon.svg",
+                              semanticsLabel: 'Logo',
+                            ),
                           ),
                         ),
-                      ),
-                      OutlinedButton(
-                        onPressed: () async {
-                          if (_formKey.currentState!.validate()) {
-                            try {
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              context.loaderOverlay.show();
-                              UserCredential credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-                                email: _usernameController.text,
-                                password: _passwordController.text,
-                              );
-                              context.loaderOverlay.hide();
-                              if (credential.user != null) {
-                                setState(() {});
-                              } else {
+                        Form(
+                          key: _formKey,
+                          child: AutofillGroup(
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                                  child: TextFormField(
+                                    controller: _usernameController,
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: [AutofillHints.email],
+                                    decoration: InputDecoration(
+                                      labelText: "Username",
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return "Required";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                                  child: TextFormField(
+                                    controller: _passwordController,
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: [AutofillHints.password, AutofillHints.newPassword],
+                                    decoration: InputDecoration(
+                                      labelText: "Password",
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscureText ? Icons.visibility_off : Icons.visibility,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _obscureText = !_obscureText;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    obscureText: _obscureText,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return "Required";
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        OutlinedButton(
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              try {
+                                FocusManager.instance.primaryFocus?.unfocus();
+                                context.loaderOverlay.show();
+                                UserCredential credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                  email: _usernameController.text,
+                                  password: _passwordController.text,
+                                );
+                                context.loaderOverlay.hide();
+                                if (credential.user != null) {
+                                  setState(() {});
+                                } else {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: Text("Oops"),
+                                        content: Text("Sign in credentials may be incorrect, try again"),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop(false); // Close the dialog
+                                            },
+                                            child: Text("Ok"),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                              } on FirebaseAuthException catch (e) {
+                                context.loaderOverlay.hide();
                                 showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
                                     return AlertDialog(
                                       title: Text("Oops"),
-                                      content: Text("Sign in credentials may be incorrect, try again"),
+                                      content: Text(e.message ?? ""),
                                       actions: [
                                         TextButton(
                                           onPressed: () {
@@ -187,31 +228,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                   },
                                 );
                               }
-                            } on FirebaseAuthException catch (e) {
-                              context.loaderOverlay.hide();
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text("Oops"),
-                                    content: Text(e.message ?? ""),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop(false); // Close the dialog
-                                        },
-                                        child: Text("Ok"),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
                             }
-                          }
-                        },
-                        child: Text("Sign in"),
-                      ),
-                    ],
+                          },
+                          child: Text("Sign in"),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               )

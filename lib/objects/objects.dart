@@ -30,6 +30,10 @@ class Job {
   final List<String> tools;
   @JsonKey(name: "EstimatedHours")
   final double? estimatedHours;
+  @JsonKey(name: "ActualHours")
+  double? actualHours;
+  @JsonKey(name: "Completed", defaultValue: false)
+  bool completed;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get estimatedHoursString {
     if (estimatedHours == null) return "N/A";
@@ -42,6 +46,8 @@ class Job {
     required this.description,
     required this.tools,
     required this.estimatedHours,
+    this.actualHours,
+    this.completed = false,
   });
 
   factory Job.fromJson(Map<String, dynamic> json) => _$JobFromJson(json);

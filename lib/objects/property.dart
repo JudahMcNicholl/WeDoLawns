@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -18,6 +20,10 @@ class Property {
   GeoPoint location;
   @JsonKey(name: "Jobs")
   final List<Job> jobs;
+
+  @JsonKey(name: "InProgress", defaultValue: false)
+  bool inProgress;
+
   @JsonKey(name: "DateCreated")
   final DateTime dateCreated;
 
@@ -80,6 +86,16 @@ class Property {
   String youtubeUrl;
 
   String get description {
+    int remainingJobs = jobs.where((e) => e.completed).length;
+    return "${jobs.length} Job${jobs.length > 1 ? "s" : ""}, $remainingJobs Remaining";
+  }
+
+  String get remainingJobString {
+    int remainingJobs = jobs.where((e) => !e.completed).length;
+    return "$remainingJobs Remaining";
+  }
+
+  String get totalJobString {
     return "${jobs.length} Job${jobs.length > 1 ? "s" : ""}";
   }
 
@@ -96,9 +112,35 @@ class Property {
     this.estimatedWoolsacks,
     this.actualWoolsacks,
     this.youtubeUrl = "",
+    this.inProgress = false,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) => _$PropertyFromJson(json);
+
+  Color get statusColor {
+    if (inProgress) return Color(0x3862B6CB);
+    if ((jobs.isNotEmpty && jobs.length == jobs.where((e) => e.completed).length) || dateFinished != null) {
+      return Color(0xFFCBD9C3);
+    }
+    return Color(0x358F9563);
+  }
+
+  Color get statusIconColor {
+    if (inProgress) return Color(0xFF62B6CB);
+    if ((jobs.isNotEmpty && jobs.length == jobs.where((e) => e.completed).length) || dateFinished != null) {
+      return Color(0xFF236002);
+    }
+    return Color(0xFF8F9563);
+  }
+
+  Color get remainingColor {
+    if (inProgress) return Color(0xFF62B6CB);
+    if ((jobs.isNotEmpty && jobs.length == jobs.where((e) => e.completed).length) || dateFinished != null) {
+      return Color(0xFF236002);
+    }
+    return Color(0xFF8F9563);
+  }
+
   Map<String, dynamic> toJson() => _$PropertyToJson(this);
 
   static GeoPoint _geoPointFromJson(Map<String, dynamic> json) => GeoPoint(json['latitude'], json['longitude']);

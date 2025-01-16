@@ -27,6 +27,7 @@ class _SelectLocationPageState extends State<SelectLocationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text("Select location"),
       ),
       body: Column(

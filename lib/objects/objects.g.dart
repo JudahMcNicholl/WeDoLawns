@@ -22,6 +22,8 @@ Job _$JobFromJson(Map<String, dynamic> json) => Job(
       description: json['Description'] as String,
       tools: (json['Tools'] as List<dynamic>).map((e) => e as String).toList(),
       estimatedHours: (json['EstimatedHours'] as num?)?.toDouble(),
+      actualHours: (json['ActualHours'] as num?)?.toDouble(),
+      completed: json['Completed'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$JobToJson(Job instance) => <String, dynamic>{
@@ -30,6 +32,8 @@ Map<String, dynamic> _$JobToJson(Job instance) => <String, dynamic>{
       'Description': instance.description,
       'Tools': instance.tools,
       'EstimatedHours': instance.estimatedHours,
+      'ActualHours': instance.actualHours,
+      'Completed': instance.completed,
     };
 
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
