@@ -1,7 +1,0 @@
-export PATH="$PATH":"$HOME/.pub-cache/bin"
-export PATH="$PATH":"$HOME/.pub-cache/bin"
-export PATH=/Users/judah/Development/flutter/bin:$PATH
-export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
-export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
-alias python=/usr/bin/python3
