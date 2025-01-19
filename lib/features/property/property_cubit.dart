@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:wedolawns/objects/objects.dart';
 import 'package:wedolawns/objects/property.dart';
+import 'package:wedolawns/utils/common.dart';
 
 part 'property_state.dart';
 
@@ -98,22 +99,30 @@ class PropertyCubit extends Cubit<PropertyState> {
     return true;
   }
 
-  bool addMedia({required int index, required String mediaUrl}) {
-    if (mediaUrl.contains("youtube")) {
-    } else {
-      List<String> split = mediaUrl.split("/");
-      int indexOf = split.indexOf("d");
-      for (String item in split) {
-        if (item == "d") {}
-      }
-      String id = split[indexOf + 1]; //The one after /d/
-      String url = "https://drive.google.com/uc?export=download&id=$id";
-      property.photos[index].path = url;
+  String _getId(String url) {
+    List<String> split = url.split("/");
+    int indexOf = split.indexOf("d");
+    for (String item in split) {
+      if (item == "d") {}
     }
+    String id = split[indexOf + 1]; //The one after /d/
+    return id;
+  }
 
+  bool addMedia({required int index, required String mediaUrl}) {
     if (property.photos.isEmpty) {
       property.photos.add(MediaItem(id: 0, path: ""));
       property.photos.add(MediaItem(id: 1, path: ""));
+    }
+    if (mediaUrl.contains("youtube")) {
+    } else {
+      String mediaUrlId = _getId(mediaUrl);
+      // String heicUrlId = _getId(heicUrl);
+
+      String mediaUrlString = "https://drive.google.com/uc?export=download&id=$mediaUrlId";
+      // String heicUrlString = "https://drive.google.com/uc?export=download&id=$heicUrlId";
+      property.photos[index].path = mediaUrlString;
+      // property.photos[index].path = heicUrlString;
     }
 
     _collectionRef.doc(property.id).set(property);
@@ -154,17 +163,13 @@ class PropertyCubit extends Cubit<PropertyState> {
     } else {
       swapItems(property.photos, index, index - 1);
     }
-
+    _collectionRef.doc(property.id).set(property);
     return true;
   }
 
-  void swapItems<T>(List<T> list, int index1, int index2) {
-    if (index1 < 0 || index2 < 0 || index1 >= list.length || index2 >= list.length) {
-      throw ArgumentError('Indices are out of bounds');
-    }
-
-    T temp = list[index1];
-    list[index1] = list[index2];
-    list[index2] = temp;
+  completeJob(Job job) {
+    job.completed = true;
+    _collectionRef.doc(property.id).set(property);
+    return true;
   }
 }

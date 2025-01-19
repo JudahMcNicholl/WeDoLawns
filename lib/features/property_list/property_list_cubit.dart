@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:swipe_refresh/swipe_refresh.dart';
 import 'package:wedolawns/objects/base_state.dart';
 import 'package:wedolawns/objects/property.dart';
 
@@ -52,14 +54,6 @@ class PropertyListCubit extends Cubit<PropertyListState> {
               property: property,
             ));
           },
-          // infoWindow: InfoWindow(
-          //     title: property.name,
-          //     onTap: () {
-          //       emit(InfoWindowTapped(
-          //         count: state.count + 1,
-          //         property: property,
-          //       ));
-          //     }),
         ),
       );
     }
@@ -68,6 +62,11 @@ class PropertyListCubit extends Cubit<PropertyListState> {
 
   final List<Property> _properties = [];
   List<Property> get properties => _properties;
+
+  final StreamController<SwipeRefreshState> _controller = StreamController<SwipeRefreshState>.broadcast();
+  Stream<SwipeRefreshState> get propertyLoadingStream => _controller.stream;
+  final StreamController<bool> _propertyOverlayLoadingController = StreamController<bool>.broadcast();
+  Stream<bool> get propertyOverlayLoadingStream => _propertyOverlayLoadingController.stream;
 
   insertProperty(Property property) {
     _properties.add(property);
@@ -80,5 +79,12 @@ class PropertyListCubit extends Cubit<PropertyListState> {
       _properties.remove(property);
       emit(PropertyDeleted(count: state.count + 1));
     });
+  }
+
+  reloadPropertiesSessions() async {
+    emit(PropertiesReloading());
+    _controller.sink.add(SwipeRefreshState.loading);
+    await initialize();
+    _controller.sink.add(SwipeRefreshState.hidden);
   }
 }

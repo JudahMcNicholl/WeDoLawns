@@ -8,8 +8,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:wedolawns/features/property/property_cubit.dart';
 import 'package:wedolawns/objects/objects.dart';
 import 'package:wedolawns/widgets/add_job_dialog.dart';
+import 'package:wedolawns/widgets/color_key.dart';
 import 'package:wedolawns/widgets/edit_job_dialog.dart';
 import 'package:wedolawns/widgets/job_item.dart';
+import 'package:wedolawns/widgets/left_right_item.dart';
 
 class PropertyPage extends StatefulWidget {
   const PropertyPage({super.key});
@@ -290,47 +292,35 @@ class _PropertyPageState extends State<PropertyPage> {
       body: SingleChildScrollView(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height,
+            minHeight: MediaQuery.of(context).size.height * 1.2,
           ),
           child: IntrinsicHeight(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Difficulty"),
-                        Text(_cubit.property.difficulty.toString(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            )),
-                      ],
+                    child: ColorKeyWidget(
+                      isComplete: _cubit.property.isComplete,
+                      isNew: _cubit.property.isNew,
+                      inProgress: _cubit.property.isInProgress,
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Created at"),
-                      Text(
-                        _cubit.property.dateCreatedString,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Text("Finished at"),
                         Text(
-                          _cubit.property.dateFinishedString,
+                          _cubit.property.contactName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          _cubit.property.contactPhoneNumber.toString(),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
@@ -338,55 +328,67 @@ class _PropertyPageState extends State<PropertyPage> {
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Estimated hours"),
-                      Text(
-                        _cubit.property.estimatedHoursString,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Actual hours"),
-                        Text(
-                          _cubit.property.hoursWorkedString,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          flex: 2,
+                          child: LeftRightItem(
+                            leftText: "Created @",
+                            rightText: _cubit.property.dateCreatedString,
+                          ),
+                        ),
+                        Spacer(flex: 1),
+                        Expanded(
+                          flex: 2,
+                          child: LeftRightItem(
+                            leftText: "Difficulty",
+                            rightText: _cubit.property.difficultyString,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Estimated woolsacks"),
-                      Text(
-                        _cubit.property.estimatedWoolsacksString,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: LeftRightItem(
+                            leftText: "Finished @",
+                            rightText: _cubit.property.dateFinishedString,
+                          ),
                         ),
-                      ),
-                    ],
+                        Spacer(flex: 1),
+                        Expanded(
+                          flex: 2,
+                          child: LeftRightItem(
+                            leftText: "Est/Hours Spent",
+                            rightText: _cubit.property.hoursConcatenatedString,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("Actual woolsacks"),
-                        Text(
-                          _cubit.property.actualWoolsacksString,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          flex: 2,
+                          child: LeftRightItem(
+                            leftText: "Cost",
+                            rightText: _cubit.property.totalCostString,
+                          ),
+                        ),
+                        Spacer(flex: 1),
+                        Expanded(
+                          flex: 2,
+                          child: LeftRightItem(
+                            leftText: "Est/Woolsacks",
+                            rightText: _cubit.property.woolsacksConcatenatedString,
                           ),
                         ),
                       ],
@@ -437,6 +439,11 @@ class _PropertyPageState extends State<PropertyPage> {
                           padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
                           child: JobItem(
                             job: job,
+                            onComplete: () {
+                              if (_cubit.completeJob(job)) {
+                                setState(() {});
+                              }
+                            },
                             onDelete: () {
                               showDialog(
                                 context: context,
@@ -501,8 +508,10 @@ class _PropertyPageState extends State<PropertyPage> {
                     ),
                   ),
                   SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.4,
+                    height: MediaQuery.of(context).size.height,
                     child: GridView.builder(
+                      shrinkWrap: true, // Makes the GridView take only as much height as its children
+                      physics: NeverScrollableScrollPhysics(), // Disables scrolling
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2, // Two columns
                       ),
@@ -526,7 +535,10 @@ class _PropertyPageState extends State<PropertyPage> {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
-                                          TextEditingController controller = TextEditingController(text: item?.path);
+                                          TextEditingController controller = TextEditingController(
+                                              text: true
+                                                  ? "https://drive.google.com/file/d/18aYI5EHJ0WeAHVcnt31mZlce-b_L5JU6/view?usp=drive_link"
+                                                  : item?.path);
                                           return AlertDialog(
                                             title: Text("Add Media"),
                                             content: Column(
@@ -553,7 +565,11 @@ class _PropertyPageState extends State<PropertyPage> {
                                               ),
                                               ElevatedButton(
                                                 onPressed: () {
-                                                  if (_cubit.addMedia(index: index, mediaUrl: controller.text)) {
+                                                  if (_cubit.addMedia(
+                                                    index: index,
+                                                    mediaUrl: controller.text,
+                                                    // heicUrl: heicController.text,
+                                                  )) {
                                                     if (index == _cubit.property.photos.length - 2) {
                                                       // Add two new items to the photos array
                                                       _cubit.property.photos.add(MediaItem(id: _cubit.property.photos.length, path: ""));
@@ -639,14 +655,15 @@ class _PropertyPageState extends State<PropertyPage> {
                                     alignment: Alignment.center,
                                     children: [
                                       CachedNetworkImage(
-                                        imageUrl: item.path,
-                                        progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
-                                          width: 12,
-                                          height: 12,
-                                          child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
-                                        ),
-                                        errorWidget: (context, url, error) => Icon(Icons.error),
-                                      ),
+                                          imageUrl: item.path,
+                                          progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
+                                                width: 12,
+                                                height: 12,
+                                                child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
+                                              ),
+                                          errorWidget: (context, url, error) {
+                                            return Icon(Icons.error);
+                                          }),
                                       Align(
                                         alignment: Alignment.topRight,
                                         child: IconButton(

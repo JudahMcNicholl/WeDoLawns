@@ -16,6 +16,10 @@ class PropertyDeleted extends PropertyListState {
   const PropertyDeleted({super.count});
 }
 
+class PropertiesReloading extends PropertyListState {
+  const PropertiesReloading({super.count});
+}
+
 class InfoWindowTapped extends PropertyListState {
   final Property property;
   const InfoWindowTapped({super.count, required this.property});

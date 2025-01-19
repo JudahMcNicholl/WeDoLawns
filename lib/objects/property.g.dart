@@ -27,11 +27,17 @@ Property _$PropertyFromJson(Map<String, dynamic> json) => Property(
       actualWoolsacks: (json['ActualWoolsacks'] as num?)?.toDouble(),
       youtubeUrl: json['YoutubeUrl'] as String? ?? '',
       inProgress: json['InProgress'] as bool? ?? false,
+      contactName: json['ContactName'] as String? ?? '',
+      contactPhoneNumber: json['ContactPhoneNumber'] as String? ?? '',
+      totalCost: (json['TotalCost'] as num?)?.toDouble() ?? 0.0,
     );
 
 Map<String, dynamic> _$PropertyToJson(Property instance) => <String, dynamic>{
       'Id': instance.id,
       'Name': instance.name,
+      'ContactName': instance.contactName,
+      'ContactPhoneNumber': instance.contactPhoneNumber,
+      'TotalCost': instance.totalCost,
       'Location': Property._geoPointToJson(instance.location),
       'Jobs': instance.jobs.map((e) => e.toJson()).toList(),
       'InProgress': instance.inProgress,

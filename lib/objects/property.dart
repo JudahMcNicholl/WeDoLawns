@@ -4,11 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:wedolawns/objects/objects.dart';
+import 'package:wedolawns/utils/constants.dart';
 import 'package:wedolawns/utils/double_utils.dart';
 
 part 'property.g.dart';
 
-DateFormat dateFormat = DateFormat("MMMM d, yyyy");
+DateFormat dateFormat = DateFormat("yy.MM.dd");
+NumberFormat currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
 
 @JsonSerializable(explicitToJson: true)
 class Property {
@@ -16,6 +18,17 @@ class Property {
   final String? id;
   @JsonKey(name: "Name")
   final String name;
+  @JsonKey(name: "ContactName", defaultValue: "")
+  final String contactName;
+  @JsonKey(name: "ContactPhoneNumber", defaultValue: "")
+  final String contactPhoneNumber;
+  @JsonKey(name: "TotalCost", defaultValue: 0.0)
+  final double totalCost;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  String get totalCostString {
+    return currencyFormat.format(totalCost);
+  }
+
   @JsonKey(name: "Location", fromJson: _geoPointFromJson, toJson: _geoPointToJson)
   GeoPoint location;
   @JsonKey(name: "Jobs")
@@ -44,7 +57,7 @@ class Property {
   String get estimatedHoursString {
     double totalHours = jobs.fold(0.0, (sum, job) => sum + (job.estimatedHours ?? 0 as num));
 
-    if (totalHours == 0) return "N/A";
+    if (totalHours == 0) return "-";
     return totalHours.formatWithOptionalDecimal();
   }
 
@@ -52,15 +65,20 @@ class Property {
   double? hoursWorked;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get hoursWorkedString {
-    if (hoursWorked == null) return "N/A";
+    if (hoursWorked == null) return "-";
     return hoursWorked!.formatWithOptionalDecimal();
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  String get hoursConcatenatedString {
+    return "$estimatedHoursString/$hoursWorkedString";
   }
 
   @JsonKey(name: "EstimatedWoolsacks")
   final double? estimatedWoolsacks;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get estimatedWoolsacksString {
-    if (estimatedWoolsacks == null) return "N/A";
+    if (estimatedWoolsacks == null) return "-";
     return estimatedWoolsacks!.formatWithOptionalDecimal();
   }
 
@@ -68,8 +86,13 @@ class Property {
   double? actualWoolsacks;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get actualWoolsacksString {
-    if (actualWoolsacks == null) return "N/A";
+    if (actualWoolsacks == null) return "-";
     return actualWoolsacks!.formatWithOptionalDecimal();
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  String get woolsacksConcatenatedString {
+    return "$estimatedWoolsacksString/$actualWoolsacksString";
   }
 
   @JsonKey(name: "Difficulty")
@@ -113,32 +136,39 @@ class Property {
     this.actualWoolsacks,
     this.youtubeUrl = "",
     this.inProgress = false,
+    this.contactName = "",
+    this.contactPhoneNumber = "",
+    this.totalCost = 0.0,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) => _$PropertyFromJson(json);
 
+  bool get isNew => !isInProgress && !isComplete;
+  bool get isInProgress => inProgress;
+  bool get isComplete => (jobs.isNotEmpty && jobs.length == jobs.where((e) => e.completed).length) || dateFinished != null;
+
   Color get statusColor {
-    if (inProgress) return Color(0x3862B6CB);
-    if ((jobs.isNotEmpty && jobs.length == jobs.where((e) => e.completed).length) || dateFinished != null) {
-      return Color(0xFFCBD9C3);
+    if (isInProgress) return inProgressColorOpaque;
+    if (isComplete) {
+      return isCompletedColorOpaque;
     }
-    return Color(0x358F9563);
+    return isNewColorOpaque;
   }
 
   Color get statusIconColor {
-    if (inProgress) return Color(0xFF62B6CB);
-    if ((jobs.isNotEmpty && jobs.length == jobs.where((e) => e.completed).length) || dateFinished != null) {
-      return Color(0xFF236002);
+    if (isInProgress) return inProgressColor;
+    if (isComplete) {
+      return isCompletedColor;
     }
-    return Color(0xFF8F9563);
+    return isNewColor;
   }
 
   Color get remainingColor {
-    if (inProgress) return Color(0xFF62B6CB);
-    if ((jobs.isNotEmpty && jobs.length == jobs.where((e) => e.completed).length) || dateFinished != null) {
-      return Color(0xFF236002);
+    if (isInProgress) return inProgressColor;
+    if (isComplete) {
+      return isCompletedColor;
     }
-    return Color(0xFF8F9563);
+    return isNewColor;
   }
 
   Map<String, dynamic> toJson() => _$PropertyToJson(this);

@@ -17,7 +17,7 @@ import 'package:wedolawns/widgets/select_location.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: null);
+  await Firebase.initializeApp();
   runApp(Phoenix(child: MyApp()));
 }
 
@@ -41,7 +41,40 @@ class MyApp extends StatelessWidget {
           backgroundColor: Color.fromARGB(255, 36, 97, 3),
           foregroundColor: Colors.white,
         ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+            side: BorderSide(color: Color.fromARGB(255, 36, 97, 3), width: 1),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(4),
+              ),
+            ),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color.fromARGB(255, 36, 97, 3),
+            foregroundColor: Colors.white,
+            elevation: 2,
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(4),
+              ),
+            ),
+          ),
+        ),
         inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
+        scaffoldBackgroundColor: Colors.white,
       ),
       home: const LoaderOverlay(
         child: MyHomePage(),
