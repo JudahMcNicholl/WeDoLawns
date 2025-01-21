@@ -17,16 +17,30 @@ class Property {
   @JsonKey(name: "Id")
   final String? id;
   @JsonKey(name: "Name")
-  final String name;
+  String address;
   @JsonKey(name: "ContactName", defaultValue: "")
-  final String contactName;
+  String contactName;
   @JsonKey(name: "ContactPhoneNumber", defaultValue: "")
-  final String contactPhoneNumber;
+  String contactPhoneNumber;
+
   @JsonKey(name: "TotalCost", defaultValue: 0.0)
-  final double totalCost;
+  double totalCost;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get totalCostString {
     return currencyFormat.format(totalCost);
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  String get estimatedCostString {
+    double estimatedCost = 7.0;
+    if (estimatedWoolsacks != null) {
+      // Calculate the number of trips (rounding up if necessary)
+      int tripsRequired = (estimatedWoolsacks! / 4).ceil();
+
+      // Total cost is trips multiplied by the minimum cost per trip
+      estimatedCost = tripsRequired * 7;
+    }
+    return currencyFormat.format(estimatedCost);
   }
 
   @JsonKey(name: "Location", fromJson: _geoPointFromJson, toJson: _geoPointToJson)
@@ -61,12 +75,12 @@ class Property {
     return totalHours.formatWithOptionalDecimal();
   }
 
-  @JsonKey(name: "HoursWorked")
-  double? hoursWorked;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  double get totalHoursWorked => jobs.fold(0.0, (sum, job) => sum + (job.actualHours ?? 0 as num));
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get hoursWorkedString {
-    if (hoursWorked == null) return "-";
-    return hoursWorked!.formatWithOptionalDecimal();
+    if (totalHoursWorked == 0.0) return "-";
+    return totalHoursWorked.formatWithOptionalDecimal();
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -75,7 +89,7 @@ class Property {
   }
 
   @JsonKey(name: "EstimatedWoolsacks")
-  final double? estimatedWoolsacks;
+  double? estimatedWoolsacks;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get estimatedWoolsacksString {
     if (estimatedWoolsacks == null) return "-";
@@ -96,20 +110,20 @@ class Property {
   }
 
   @JsonKey(name: "Difficulty")
-  final int difficulty;
+  int difficulty;
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get difficultyString {
     return difficulty.toStringAsFixed(0);
   }
 
   @JsonKey(name: "Photos")
-  final List<MediaItem> photos;
+  List<MediaItem> photos;
 
   @JsonKey(name: "YoutubeUrl", defaultValue: "")
   String youtubeUrl;
 
   String get description {
-    int remainingJobs = jobs.where((e) => e.completed).length;
+    int remainingJobs = jobs.where((e) => !e.completed).length;
     return "${jobs.length} Job${jobs.length > 1 ? "s" : ""}, $remainingJobs Remaining";
   }
 
@@ -124,14 +138,13 @@ class Property {
 
   Property({
     this.id,
-    required this.name,
+    required this.address,
     required this.location,
     required this.dateCreated,
     this.dateFinished,
     required this.difficulty,
     required this.photos,
     required this.jobs,
-    this.hoursWorked,
     this.estimatedWoolsacks,
     this.actualWoolsacks,
     this.youtubeUrl = "",
@@ -179,4 +192,23 @@ class Property {
         'latitude': geoPoint.latitude,
         'longitude': geoPoint.longitude,
       };
+
+  bool hasChanged(Property other) {
+    if (id != other.id) return true;
+    if (address != other.address) return true;
+    if (contactName != other.contactName) return true;
+    if (contactPhoneNumber != other.contactPhoneNumber) return true;
+    if (totalCost != other.totalCost) return true;
+    if (location.latitude != other.location.latitude || location.longitude != other.location.longitude) return true;
+    if (estimatedWoolsacks != other.estimatedWoolsacks) return true;
+    if (actualWoolsacks != other.actualWoolsacks) return true;
+    if (difficulty != other.difficulty) return true;
+    if (jobs.length != other.jobs.length) return true; // You may need to define equality for Job
+    if (inProgress != other.inProgress) return true;
+    if (dateCreated != other.dateCreated) return true;
+    if (dateFinished != other.dateFinished) return true;
+    if (youtubeUrl != other.youtubeUrl) return true;
+
+    return false; // No differences found
+  }
 }

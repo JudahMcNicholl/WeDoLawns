@@ -11,7 +11,7 @@ part 'property_state.dart';
 class PropertyCubit extends Cubit<PropertyState> {
   PropertyCubit(this.property) : super(PropertyStateInitial());
 
-  final Property property;
+  Property property;
 
   // List of icons and their labels
   final List<Map<String, dynamic>> items = [
@@ -81,14 +81,7 @@ class PropertyCubit extends Cubit<PropertyState> {
 
   bool finished({required String hoursWorked, required String woolsacksFilled}) {
     property.dateFinished = DateTime.now();
-    property.hoursWorked = double.parse(hoursWorked);
     property.actualWoolsacks = double.parse(woolsacksFilled);
-    _collectionRef.doc(property.id).set(property);
-    return true;
-  }
-
-  bool updateActualHours({required String hoursWorked}) {
-    property.hoursWorked = double.parse(hoursWorked);
     _collectionRef.doc(property.id).set(property);
     return true;
   }
@@ -167,9 +160,10 @@ class PropertyCubit extends Cubit<PropertyState> {
     return true;
   }
 
-  completeJob(Job job) {
+  completeJob(Job job, String actualHours) async {
     job.completed = true;
-    _collectionRef.doc(property.id).set(property);
+    job.actualHours = double.tryParse(actualHours);
+    await _collectionRef.doc(property.id).set(property);
     return true;
   }
 }

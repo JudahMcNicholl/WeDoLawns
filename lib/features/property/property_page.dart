@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wedolawns/features/property/property_cubit.dart';
 import 'package:wedolawns/objects/objects.dart';
+import 'package:wedolawns/objects/property.dart';
 import 'package:wedolawns/widgets/add_job_dialog.dart';
 import 'package:wedolawns/widgets/color_key.dart';
 import 'package:wedolawns/widgets/edit_job_dialog.dart';
@@ -72,8 +73,7 @@ class _PropertyPageState extends State<PropertyPage> {
         showDialog(
           context: context,
           builder: (BuildContext context) {
-            TextEditingController hoursController =
-                TextEditingController(text: _cubit.property.hoursWorked == null ? "" : _cubit.property.hoursWorked.toString());
+            TextEditingController hoursController = TextEditingController(text: _cubit.property.hoursWorkedString);
             TextEditingController woolsackController =
                 TextEditingController(text: _cubit.property.actualWoolsacks == null ? "" : _cubit.property.actualWoolsacks.toString());
             return AlertDialog(
@@ -86,7 +86,7 @@ class _PropertyPageState extends State<PropertyPage> {
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
                     child: TextField(
                       controller: hoursController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       textInputAction: TextInputAction.done,
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
@@ -98,7 +98,7 @@ class _PropertyPageState extends State<PropertyPage> {
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
                     child: TextField(
                       controller: woolsackController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       textInputAction: TextInputAction.done,
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
@@ -134,15 +134,14 @@ class _PropertyPageState extends State<PropertyPage> {
         showDialog(
           context: context,
           builder: (BuildContext context) {
-            TextEditingController controller =
-                TextEditingController(text: _cubit.property.hoursWorked == null ? "" : _cubit.property.hoursWorked.toString());
+            TextEditingController controller = TextEditingController(text: _cubit.property.hoursWorkedString);
             return AlertDialog(
               title: Text("Set Actual hours"),
               content: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
                 child: TextField(
                   controller: controller,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   textInputAction: TextInputAction.done,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
@@ -159,9 +158,9 @@ class _PropertyPageState extends State<PropertyPage> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (_cubit.updateActualHours(hoursWorked: controller.text)) {
-                      setState(() {});
-                    }
+                    // if (_cubit.updateActualHours(hoursWorked: controller.text)) {
+                    //   setState(() {});
+                    // }
 
                     Navigator.of(context).pop(true); // Close the dialog
                   },
@@ -184,7 +183,7 @@ class _PropertyPageState extends State<PropertyPage> {
                 padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
                 child: TextField(
                   controller: controller,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   textInputAction: TextInputAction.done,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
@@ -234,7 +233,7 @@ class _PropertyPageState extends State<PropertyPage> {
                 padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
                 child: TextField(
                   controller: controller,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   textInputAction: TextInputAction.done,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
@@ -272,244 +271,283 @@ class _PropertyPageState extends State<PropertyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_cubit.property.name),
-        centerTitle: true,
-        actions: <Widget>[
-          PopupMenuButton<int>(
-            onSelected: (item) => handleClick(item),
-            itemBuilder: (context) => [
-              PopupMenuItem<int>(value: 0, child: Text('Finished')),
-              PopupMenuItem<int>(value: 1, child: Text('Actual hours')),
-              PopupMenuItem<int>(value: 2, child: Text('Actual woolsacks')),
-              PopupMenuItem<int>(value: 3, child: Text('Location')),
-              PopupMenuItem<int>(value: 4, child: Text('Youtube')),
-            ],
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height * 1.2,
-          ),
-          child: IntrinsicHeight(
-            child: Padding(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        Navigator.of(context).pop(_cubit.property);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_cubit.property.address),
+          centerTitle: true,
+          actions: <Widget>[
+            PopupMenuButton<int>(
+              onSelected: (item) => handleClick(item),
+              itemBuilder: (context) => [
+                PopupMenuItem<int>(value: 0, child: Text('Finished')),
+                PopupMenuItem<int>(value: 1, child: Text('Actual hours')),
+                PopupMenuItem<int>(value: 2, child: Text('Actual woolsacks')),
+                PopupMenuItem<int>(value: 3, child: Text('Location')),
+                PopupMenuItem<int>(value: 4, child: Text('Youtube')),
+              ],
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: ColorKeyWidget(
-                      isComplete: _cubit.property.isComplete,
-                      isNew: _cubit.property.isNew,
-                      inProgress: _cubit.property.isInProgress,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text(
-                          _cubit.property.contactName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          _cubit.property.contactPhoneNumber.toString(),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: LeftRightItem(
-                            leftText: "Created @",
-                            rightText: _cubit.property.dateCreatedString,
-                          ),
-                        ),
-                        Spacer(flex: 1),
-                        Expanded(
-                          flex: 2,
-                          child: LeftRightItem(
-                            leftText: "Difficulty",
-                            rightText: _cubit.property.difficultyString,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: LeftRightItem(
-                            leftText: "Finished @",
-                            rightText: _cubit.property.dateFinishedString,
-                          ),
-                        ),
-                        Spacer(flex: 1),
-                        Expanded(
-                          flex: 2,
-                          child: LeftRightItem(
-                            leftText: "Est/Hours Spent",
-                            rightText: _cubit.property.hoursConcatenatedString,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: LeftRightItem(
-                            leftText: "Cost",
-                            rightText: _cubit.property.totalCostString,
-                          ),
-                        ),
-                        Spacer(flex: 1),
-                        Expanded(
-                          flex: 2,
-                          child: LeftRightItem(
-                            leftText: "Est/Woolsacks",
-                            rightText: _cubit.property.woolsacksConcatenatedString,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Jobs (${_cubit.property.jobs.length})",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
+              child: SingleChildScrollView(
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      child: ColorKeyWidget(
+                        isComplete: _cubit.property.isComplete,
+                        isNew: _cubit.property.isNew,
+                        inProgress: _cubit.property.isInProgress,
                       ),
-                      IconButton(
-                        icon: Icon(Icons.add),
-                        iconSize: 32,
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AddJobDialog(
-                                items: _cubit.items,
-                                onAddJob: (name, description, estimatedHours) {
-                                  if (_cubit.addJob(
-                                    name: name,
-                                    description: description,
-                                    estimatedHours: estimatedHours,
-                                  )) {
-                                    setState(() {});
-                                  }
-                                },
-                              );
-                            },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Text(
+                            _cubit.property.contactName.isEmpty ? "N/A" : _cubit.property.contactName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            _cubit.property.contactPhoneNumber.isEmpty ? "N/A" : _cubit.property.contactPhoneNumber.toString(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: LeftRightItem(
+                              leftText: "Created @",
+                              rightText: _cubit.property.dateCreatedString,
+                            ),
+                          ),
+                          Spacer(flex: 1),
+                          Expanded(
+                            flex: 5,
+                            child: LeftRightItem(
+                              leftText: "Difficulty",
+                              rightText: _cubit.property.difficultyString,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: LeftRightItem(
+                              leftText: "Finished @",
+                              rightText: _cubit.property.dateFinishedString,
+                            ),
+                          ),
+                          Spacer(flex: 1),
+                          Expanded(
+                            flex: 5,
+                            child: LeftRightItem(
+                              leftText: "Est/Hours Spent",
+                              rightText: _cubit.property.hoursConcatenatedString,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 4,
+                            child: LeftRightItem(
+                              leftText: "Cost",
+                              rightText: _cubit.property.totalCostString,
+                            ),
+                          ),
+                          Spacer(flex: 1),
+                          Expanded(
+                            flex: 5,
+                            child: LeftRightItem(
+                              leftText: "Est/Woolsacks",
+                              rightText: _cubit.property.woolsacksConcatenatedString,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Jobs (${_cubit.property.jobs.length})",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.add),
+                          iconSize: 32,
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AddJobDialog(
+                                  items: _cubit.items,
+                                  onAddJob: (name, description, estimatedHours) {
+                                    if (_cubit.addJob(
+                                      name: name,
+                                      description: description,
+                                      estimatedHours: estimatedHours,
+                                    )) {
+                                      setState(() {});
+                                    }
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(
+                        _cubit.property.jobs.length,
+                        (index) {
+                          Job job = _cubit.property.jobs[index];
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
+                            child: JobItem(
+                              job: job,
+                              onComplete: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    TextEditingController controller = TextEditingController();
+                                    return AlertDialog(
+                                      title: Text("Set actual hours"),
+                                      content: Padding(
+                                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
+                                        child: TextField(
+                                          controller: controller,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                          textInputAction: TextInputAction.done,
+                                          textCapitalization: TextCapitalization.sentences,
+                                          decoration: InputDecoration(
+                                            labelText: "Actual hours",
+                                          ),
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(false); // Close the dialog
+                                          },
+                                          child: Text("Cancel"),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            if (_cubit.completeJob(job, controller.text)) {
+                                              setState(() {});
+                                            }
+                                            Navigator.of(context).pop(true); // Close the dialog
+                                          },
+                                          child: Text("Update"),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              onDelete: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text("Delete Job"),
+                                      content: Text("Confirm delete of (${job.name})"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(false); // Close the dialog
+                                          },
+                                          child: Text("Cancel"),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              _cubit.removeJob(job);
+                                            });
+                                            Navigator.of(context).pop(true); // Close the dialog
+                                          },
+                                          child: Text("Delete"),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              onEdit: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return EditJobDialog(
+                                      items: _cubit.items,
+                                      jobName: job.name,
+                                      jobDescription: job.description,
+                                      jobEstimatedHours: job.estimatedHours,
+                                      onEditJob: (name, description, estimatedHours) {
+                                        if (_cubit.editJob(
+                                          job: job,
+                                          name: name,
+                                          description: description,
+                                          estimatedHours: estimatedHours,
+                                        )) {
+                                          setState(() {});
+                                        }
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                           );
                         },
                       ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: List.generate(
-                      _cubit.property.jobs.length,
-                      (index) {
-                        Job job = _cubit.property.jobs[index];
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
-                          child: JobItem(
-                            job: job,
-                            onComplete: () {
-                              if (_cubit.completeJob(job)) {
-                                setState(() {});
-                              }
-                            },
-                            onDelete: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text("Delete Job"),
-                                    content: Text("Confirm delete of (${job.name})"),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop(false); // Close the dialog
-                                        },
-                                        child: Text("Cancel"),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            _cubit.removeJob(job);
-                                          });
-                                          Navigator.of(context).pop(true); // Close the dialog
-                                        },
-                                        child: Text("Delete"),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            onEdit: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return EditJobDialog(
-                                    items: _cubit.items,
-                                    jobName: job.name,
-                                    jobDescription: job.description,
-                                    jobEstimatedHours: job.estimatedHours,
-                                    onEditJob: (name, description, estimatedHours) {
-                                      if (_cubit.editJob(
-                                        job: job,
-                                        name: name,
-                                        description: description,
-                                        estimatedHours: estimatedHours,
-                                      )) {
-                                        setState(() {});
-                                      }
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        );
-                      },
                     ),
-                  ),
-                  Divider(),
-                  Text(
-                    "Media",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                    Divider(),
+                    Text(
+                      "Media",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height,
-                    child: GridView.builder(
+                    GridView.builder(
                       shrinkWrap: true, // Makes the GridView take only as much height as its children
                       physics: NeverScrollableScrollPhysics(), // Disables scrolling
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -536,7 +574,7 @@ class _PropertyPageState extends State<PropertyPage> {
                                         context: context,
                                         builder: (BuildContext context) {
                                           TextEditingController controller = TextEditingController(
-                                              text: true
+                                              text: false
                                                   ? "https://drive.google.com/file/d/18aYI5EHJ0WeAHVcnt31mZlce-b_L5JU6/view?usp=drive_link"
                                                   : item?.path);
                                           return AlertDialog(
@@ -692,11 +730,51 @@ class _PropertyPageState extends State<PropertyPage> {
                         );
                       },
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    // Floating middle button
+                    Positioned(
+                      bottom: 8, // Adjust the value to float the button above
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pushNamed("/property_edit", arguments: _cubit.property).then((value) {
+                            setState(() {
+                              if (value is Property) {
+                                _cubit.property = Property.fromJson(value.toJson());
+                              }
+                            });
+                          });
+                        },
+                        child: Container(
+                          width: 108,
+                          height: 108,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFB9AB0E), // Background color
+                            shape: BoxShape.circle, // Makes it circular
+                          ),
+                          child: Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 48, // Adjust icon size
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -4,10 +4,22 @@ import 'package:wedolawns/objects/objects.dart';
 import 'package:wedolawns/objects/property.dart';
 import 'package:wedolawns/utils/constants.dart';
 
-part 'property_create_state.dart';
+part 'property_edit_state.dart';
 
-class PropertyCreateCubit extends Cubit<PropertyCreateState> {
-  PropertyCreateCubit() : super(PropertyCreateStateInitial());
+class PropertyEditCubit extends Cubit<PropertyEditState> {
+  final Property _property;
+  Property get property => _property;
+  Property _originalProperty;
+  Property get originalProperty => _originalProperty;
+
+  bool get hasEdited {
+    return _property.hasChanged(_originalProperty);
+  }
+
+  PropertyEditCubit(
+    this._property,
+    this._originalProperty,
+  ) : super(PropertyEditStateInitial());
 
   final _collectionRef = FirebaseFirestore.instance.collection('properties').withConverter<Property>(
         fromFirestore: (snapshot, _) {
@@ -19,6 +31,8 @@ class PropertyCreateCubit extends Cubit<PropertyCreateState> {
         },
         toFirestore: (property, _) => property.toJson(),
       );
+
+  // List of icons and their labels
 
   final List<Job> _jobs = [];
   List<Job> get jobs => _jobs;
@@ -45,31 +59,12 @@ class PropertyCreateCubit extends Cubit<PropertyCreateState> {
     return true;
   }
 
-  createProperty({
-    required String name,
-    required String lat,
-    required String lon,
-    required String estWoolsacks,
-    required String difficulty,
-    required String contactName,
-    required String contactPhoneNumber,
-  }) async {
-    Property property = Property(
-        address: name,
-        location: GeoPoint(double.parse(lat), double.parse(lon)),
-        dateCreated: DateTime.now(),
-        estimatedWoolsacks: double.parse(estWoolsacks),
-        difficulty: int.parse(difficulty),
-        photos: [(MediaItem(id: 0, path: "")), (MediaItem(id: 1, path: ""))],
-        jobs: _jobs,
-        contactName: contactName,
-        contactPhoneNumber: contactPhoneNumber);
-
-    await _collectionRef.add(property);
-    emit(PropertyCreateStateCreated());
-  }
-
   removeJob(Job job) {
     _jobs.remove(job);
+  }
+
+  saveProperty() async {
+    await _collectionRef.doc(property.id).set(property);
+    _originalProperty = Property.fromJson(property.toJson());
   }
 }

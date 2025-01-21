@@ -8,21 +8,13 @@ part of 'property.dart';
 
 Property _$PropertyFromJson(Map<String, dynamic> json) => Property(
       id: json['Id'] as String?,
-      name: json['Name'] as String,
-      location:
-          Property._geoPointFromJson(json['Location'] as Map<String, dynamic>),
+      address: json['Name'] as String,
+      location: Property._geoPointFromJson(json['Location'] as Map<String, dynamic>),
       dateCreated: DateTime.parse(json['DateCreated'] as String),
-      dateFinished: json['DateFinished'] == null
-          ? null
-          : DateTime.parse(json['DateFinished'] as String),
+      dateFinished: json['DateFinished'] == null ? null : DateTime.parse(json['DateFinished'] as String),
       difficulty: (json['Difficulty'] as num).toInt(),
-      photos: (json['Photos'] as List<dynamic>)
-          .map((e) => MediaItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      jobs: (json['Jobs'] as List<dynamic>)
-          .map((e) => Job.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      hoursWorked: (json['HoursWorked'] as num?)?.toDouble(),
+      photos: (json['Photos'] as List<dynamic>).map((e) => MediaItem.fromJson(e as Map<String, dynamic>)).toList(),
+      jobs: (json['Jobs'] as List<dynamic>).map((e) => Job.fromJson(e as Map<String, dynamic>)).toList(),
       estimatedWoolsacks: (json['EstimatedWoolsacks'] as num?)?.toDouble(),
       actualWoolsacks: (json['ActualWoolsacks'] as num?)?.toDouble(),
       youtubeUrl: json['YoutubeUrl'] as String? ?? '',
@@ -34,7 +26,7 @@ Property _$PropertyFromJson(Map<String, dynamic> json) => Property(
 
 Map<String, dynamic> _$PropertyToJson(Property instance) => <String, dynamic>{
       'Id': instance.id,
-      'Name': instance.name,
+      'Name': instance.address,
       'ContactName': instance.contactName,
       'ContactPhoneNumber': instance.contactPhoneNumber,
       'TotalCost': instance.totalCost,
@@ -43,7 +35,6 @@ Map<String, dynamic> _$PropertyToJson(Property instance) => <String, dynamic>{
       'InProgress': instance.inProgress,
       'DateCreated': instance.dateCreated.toIso8601String(),
       'DateFinished': instance.dateFinished?.toIso8601String(),
-      'HoursWorked': instance.hoursWorked,
       'EstimatedWoolsacks': instance.estimatedWoolsacks,
       'ActualWoolsacks': instance.actualWoolsacks,
       'Difficulty': instance.difficulty,

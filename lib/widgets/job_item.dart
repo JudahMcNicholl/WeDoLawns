@@ -65,7 +65,7 @@ class JobItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${job.name} (Est: ${job.estimatedHoursString})",
+                      "${job.name} (Est/Actual: ${job.estimatedHoursString}/${job.actualHoursString})",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(

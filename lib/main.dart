@@ -10,6 +10,8 @@ import 'package:wedolawns/features/property/property_cubit.dart';
 import 'package:wedolawns/features/property/property_page.dart';
 import 'package:wedolawns/features/property_create/property_create_cubit.dart';
 import 'package:wedolawns/features/property_create/property_create_page.dart';
+import 'package:wedolawns/features/property_edit/property_edit_cubit.dart';
+import 'package:wedolawns/features/property_edit/property_edit_page.dart';
 import 'package:wedolawns/features/property_list/property_list_cubit.dart';
 import 'package:wedolawns/features/property_list/property_list_page.dart';
 import 'package:wedolawns/objects/property.dart';
@@ -104,6 +106,18 @@ class MyApp extends StatelessWidget {
               currentLocation: passedGeoPoint,
             );
           });
+        }
+
+        if (settings.name == "/property_edit") {
+          Property property = settings.arguments as Property;
+          return MaterialPageRoute(
+            builder: (context) {
+              return BlocProvider.value(
+                value: PropertyEditCubit(property, Property.fromJson(property.toJson())),
+                child: const PropertyEditPage(),
+              );
+            },
+          );
         }
         return null;
       },

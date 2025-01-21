@@ -37,7 +37,23 @@ class Job {
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get estimatedHoursString {
     if (estimatedHours == null) return "N/A";
-    return estimatedHours!.toStringAsFixed(0);
+    if (estimatedHours! % 1 == 0) {
+      return estimatedHours!.toStringAsFixed(0); // No decimals for whole numbers
+    }
+
+    // Return the number as is (with decimals) for non-whole numbers
+    return estimatedHours.toString();
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  String get actualHoursString {
+    if (actualHours == null) return "-";
+    if (actualHours! % 1 == 0) {
+      return actualHours!.toStringAsFixed(0); // No decimals for whole numbers
+    }
+
+    // Return the number as is (with decimals) for non-whole numbers
+    return actualHours.toString();
   }
 
   Job({

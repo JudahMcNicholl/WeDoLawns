@@ -73,7 +73,7 @@ class PropertyItem extends StatelessWidget {
                           children: [
                             Spacer(),
                             Text(
-                              property.name,
+                              property.address,
                               style: TextStyle(fontSize: 20),
                             ),
                           ],

@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:wedolawns/features/property_create/property_create_cubit.dart';
 import 'package:wedolawns/objects/objects.dart';
+import 'package:wedolawns/utils/constants.dart';
 import 'package:wedolawns/widgets/add_job_dialog.dart';
 import 'package:wedolawns/widgets/color_key.dart';
 import 'package:wedolawns/widgets/job_item.dart';
@@ -20,8 +21,8 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _propertyOwnerController = TextEditingController();
-  final TextEditingController _propertyContactController = TextEditingController();
+  final TextEditingController _contactOwnerController = TextEditingController();
+  final TextEditingController _contactPhoneNumberController = TextEditingController();
 
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _difficultyController = TextEditingController();
@@ -113,9 +114,10 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                     children: [
                                       Expanded(
                                         child: TextFormField(
-                                          controller: _propertyOwnerController,
-                                          textInputAction: TextInputAction.done,
-                                          keyboardType: TextInputType.number,
+                                          controller: _contactOwnerController,
+                                          textInputAction: TextInputAction.next,
+                                          textCapitalization: TextCapitalization.sentences,
+                                          keyboardType: TextInputType.text,
                                           decoration: InputDecoration(
                                             labelText: "Owner",
                                           ),
@@ -130,16 +132,13 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                       SizedBox(width: 10), // Add space between TextFields
                                       Expanded(
                                         child: TextFormField(
-                                          controller: _propertyContactController,
+                                          controller: _contactPhoneNumberController,
                                           textInputAction: TextInputAction.next,
-                                          keyboardType: TextInputType.number,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                           decoration: InputDecoration(
                                             labelText: "Phone Number",
                                           ),
                                           validator: (value) {
-                                            if (value == null || value.isEmpty) {
-                                              return "Required";
-                                            }
                                             return null;
                                           },
                                         ),
@@ -158,7 +157,7 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                           enabled: false,
                                           controller: _latController,
                                           textInputAction: TextInputAction.next,
-                                          keyboardType: TextInputType.number,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                           decoration: InputDecoration(
                                             labelText: "Lat",
                                           ),
@@ -177,7 +176,7 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                           enabled: false,
                                           controller: _lonController,
                                           textInputAction: TextInputAction.next,
-                                          keyboardType: TextInputType.number,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                           decoration: InputDecoration(
                                             labelText: "Lon",
                                           ),
@@ -239,8 +238,8 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                       Expanded(
                                         child: TextFormField(
                                           controller: _difficultyController,
-                                          textInputAction: TextInputAction.done,
-                                          keyboardType: TextInputType.number,
+                                          textInputAction: TextInputAction.next,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                           decoration: InputDecoration(
                                             labelText: "Difficulty",
                                             suffix: Text("/10"),
@@ -258,7 +257,7 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                         child: TextFormField(
                                           controller: _estWoolsackController,
                                           textInputAction: TextInputAction.next,
-                                          keyboardType: TextInputType.number,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                           decoration: InputDecoration(
                                             labelText: "Est woolsacks",
                                           ),
@@ -290,7 +289,7 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AddJobDialog(
-                                        items: _cubit.items,
+                                        items: tools,
                                         onAddJob: (name, description, estimatedHours) {
                                           if (_cubit.addJob(name: name, description: description, estimatedHours: estimatedHours)) {
                                             setState(() {});
@@ -352,6 +351,8 @@ class _PropertyCreatePageState extends State<PropertyCreatePage> {
                               lon: _lonController.text,
                               difficulty: _difficultyController.text,
                               estWoolsacks: _estWoolsackController.text,
+                              contactName: _contactOwnerController.text,
+                              contactPhoneNumber: _contactPhoneNumberController.text,
                             );
                           }
                         },
