@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
       title: 'We.Do.Lawns',
       theme: ThemeData(
         fontFamily: "WeDoLawns",
+        // textTheme: TextTheme(),
         colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 36, 97, 3)),
         useMaterial3: true,
         appBarTheme: AppBarTheme(

@@ -2,11 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:wedolawns/objects/drive_item.dart';
 import 'package:wedolawns/objects/objects.dart';
 import 'package:wedolawns/objects/property.dart';
 import 'package:wedolawns/utils/common.dart';
 
 part 'property_state.dart';
+
+enum SwapType { leftToRight, rightToLeft, upwards, downwards }
 
 class PropertyCubit extends Cubit<PropertyState> {
   PropertyCubit(this.property) : super(PropertyStateInitial());
@@ -92,36 +95,6 @@ class PropertyCubit extends Cubit<PropertyState> {
     return true;
   }
 
-  String _getId(String url) {
-    List<String> split = url.split("/");
-    int indexOf = split.indexOf("d");
-    for (String item in split) {
-      if (item == "d") {}
-    }
-    String id = split[indexOf + 1]; //The one after /d/
-    return id;
-  }
-
-  bool addMedia({required int index, required String mediaUrl}) {
-    if (property.photos.isEmpty) {
-      property.photos.add(MediaItem(id: 0, path: ""));
-      property.photos.add(MediaItem(id: 1, path: ""));
-    }
-    if (mediaUrl.contains("youtube")) {
-    } else {
-      String mediaUrlId = _getId(mediaUrl);
-      // String heicUrlId = _getId(heicUrl);
-
-      String mediaUrlString = "https://drive.google.com/uc?export=download&id=$mediaUrlId";
-      // String heicUrlString = "https://drive.google.com/uc?export=download&id=$heicUrlId";
-      property.photos[index].path = mediaUrlString;
-      // property.photos[index].path = heicUrlString;
-    }
-
-    _collectionRef.doc(property.id).set(property);
-    return true;
-  }
-
   bool updateLocation({required LatLng loc}) {
     GeoPoint newLocation = GeoPoint(loc.latitude, loc.longitude);
     property.location = newLocation;
@@ -136,25 +109,25 @@ class PropertyCubit extends Cubit<PropertyState> {
   }
 
   bool deleteMedia({required int index}) {
-    property.photos[index].path = "";
-    if (index % 2 == 0) {
-      if (property.photos[index].path.isEmpty && property.photos[index + 1].path.isEmpty) {
-        if (property.photos.length > 2) {
-          property.photos.removeAt(index + 1);
-          property.photos.removeAt(index);
-        }
-      }
-    }
-
+    property.photos.removeAt(index);
     _collectionRef.doc(property.id).set(property);
     return true;
   }
 
-  bool swapMedia({required int index}) {
-    if (index % 2 == 0) {
-      swapItems(property.photos, index, index + 1);
-    } else {
-      swapItems(property.photos, index, index - 1);
+  bool swapMedia({
+    required int index,
+    required SwapType swapType,
+  }) {
+    switch (swapType) {
+      case SwapType.leftToRight:
+        swapItems(property.photos, index, index + 1);
+        break;
+      case SwapType.rightToLeft:
+        swapItems(property.photos, index, index - 1);
+      case SwapType.upwards:
+        swapItems(property.photos, index, index - 2);
+      case SwapType.downwards:
+        swapItems(property.photos, index, index + 2);
     }
     _collectionRef.doc(property.id).set(property);
     return true;
@@ -165,5 +138,22 @@ class PropertyCubit extends Cubit<PropertyState> {
     job.actualHours = double.tryParse(actualHours);
     await _collectionRef.doc(property.id).set(property);
     return true;
+  }
+
+  updateMedia(List<DriveItem> value) {
+    List<DriveItem> removed = value.where((e) => !e.isSelected && property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle).toList();
+    List<DriveItem> added = value.where((e) => e.isSelected && !property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle).toList();
+    // List<DriveItem> kept = value.where((e) => property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle).toList();
+    for (DriveItem item in removed) {
+      int indexOf = property.photos.indexWhere((e) => e.path.contains(item.id));
+      if (indexOf != -1) {
+        deleteMedia(index: indexOf);
+      }
+    }
+    for (DriveItem item in added) {
+      property.photos.add(
+        MediaItem(id: property.photos.length, path: item.path),
+      );
+    }
   }
 }

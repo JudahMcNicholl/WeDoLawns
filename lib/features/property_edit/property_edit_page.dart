@@ -37,6 +37,8 @@ class _PropertyEditPageState extends State<PropertyEditPage> {
   final TextEditingController _totalCostController = TextEditingController();
   final TextEditingController _dateFinishedController = TextEditingController();
 
+  final TextEditingController _youtubeUrlController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +58,8 @@ class _PropertyEditPageState extends State<PropertyEditPage> {
 
     _totalCostController.text = _cubit.property.totalCost.toString();
     _dateFinishedController.text = _cubit.property.dateFinished == null ? "" : _cubit.property.dateFinished.toString();
+
+    _youtubeUrlController.text = _cubit.property.youtubeUrl;
   }
 
   @override
@@ -436,6 +440,23 @@ class _PropertyEditPageState extends State<PropertyEditPage> {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                                child: TextFormField(
+                                  controller: _youtubeUrlController,
+                                  textCapitalization: TextCapitalization.sentences,
+                                  textInputAction: TextInputAction.done,
+                                  onChanged: (value) {
+                                    _cubit.property.address = value;
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: "Youtube url",
+                                  ),
+                                  validator: (value) {
+                                    return null;
+                                  },
                                 ),
                               ),
                             ],

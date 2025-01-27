@@ -60,7 +60,7 @@ class PropertyCreateCubit extends Cubit<PropertyCreateState> {
         dateCreated: DateTime.now(),
         estimatedWoolsacks: double.parse(estWoolsacks),
         difficulty: int.parse(difficulty),
-        photos: [(MediaItem(id: 0, path: "")), (MediaItem(id: 1, path: ""))],
+        photos: [],
         jobs: _jobs,
         contactName: contactName,
         contactPhoneNumber: contactPhoneNumber);

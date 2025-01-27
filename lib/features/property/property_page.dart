@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wedolawns/features/property/property_cubit.dart';
+import 'package:wedolawns/objects/drive_item.dart';
 import 'package:wedolawns/objects/objects.dart';
 import 'package:wedolawns/objects/property.dart';
 import 'package:wedolawns/widgets/add_job_dialog.dart';
@@ -13,6 +13,7 @@ import 'package:wedolawns/widgets/color_key.dart';
 import 'package:wedolawns/widgets/edit_job_dialog.dart';
 import 'package:wedolawns/widgets/job_item.dart';
 import 'package:wedolawns/widgets/left_right_item.dart';
+import 'package:wedolawns/widgets/select_from_drive.dart';
 
 class PropertyPage extends StatefulWidget {
   const PropertyPage({super.key});
@@ -64,211 +65,6 @@ class _PropertyPageState extends State<PropertyPage> {
     });
   }
 
-  handleClick(int item) {
-    switch (item) {
-      case 0:
-        //Actual hours
-
-        if (_cubit.property.dateFinished != null) return;
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            TextEditingController hoursController = TextEditingController(text: _cubit.property.hoursWorkedString);
-            TextEditingController woolsackController =
-                TextEditingController(text: _cubit.property.actualWoolsacks == null ? "" : _cubit.property.actualWoolsacks.toString());
-            return AlertDialog(
-              title: Text("Finish Property"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-                    child: TextField(
-                      controller: hoursController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      textInputAction: TextInputAction.done,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        labelText: "Hours worked",
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-                    child: TextField(
-                      controller: woolsackController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      textInputAction: TextInputAction.done,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        labelText: "Woolsacks filled",
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(false); // Close the dialog
-                  },
-                  child: Text("Cancel"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_cubit.finished(hoursWorked: hoursController.text, woolsacksFilled: woolsackController.text)) {
-                      setState(() {});
-                    }
-
-                    Navigator.of(context).pop(true); // Close the dialog
-                  },
-                  child: Text("Finished"),
-                ),
-              ],
-            );
-          },
-        );
-        break;
-      case 1:
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            TextEditingController controller = TextEditingController(text: _cubit.property.hoursWorkedString);
-            return AlertDialog(
-              title: Text("Set Actual hours"),
-              content: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-                child: TextField(
-                  controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  textInputAction: TextInputAction.done,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    labelText: "Hours worked",
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(false); // Close the dialog
-                  },
-                  child: Text("Cancel"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // if (_cubit.updateActualHours(hoursWorked: controller.text)) {
-                    //   setState(() {});
-                    // }
-
-                    Navigator.of(context).pop(true); // Close the dialog
-                  },
-                  child: Text("Update"),
-                ),
-              ],
-            );
-          },
-        );
-        break;
-      case 2:
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            TextEditingController controller =
-                TextEditingController(text: _cubit.property.actualWoolsacks == null ? "" : _cubit.property.actualWoolsacks.toString());
-            return AlertDialog(
-              title: Text("Set Actual woolsacks"),
-              content: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-                child: TextField(
-                  controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  textInputAction: TextInputAction.done,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    labelText: "Woolsacks used",
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(false); // Close the dialog
-                  },
-                  child: Text("Cancel"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_cubit.updateActualWoolsacks(woolsacksUsed: controller.text)) {
-                      setState(() {});
-                    }
-
-                    Navigator.of(context).pop(true); // Close the dialog
-                  },
-                  child: Text("Update"),
-                ),
-              ],
-            );
-          },
-        );
-        break;
-      case 3:
-        Navigator.of(context).pushNamed("/location", arguments: _cubit.property.location).then((value) {
-          if (value is LatLng) {
-            if (_cubit.updateLocation(loc: value)) {
-              setState(() {});
-            }
-          }
-        });
-        break;
-      case 4:
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            TextEditingController controller = TextEditingController(text: _cubit.property.youtubeUrl);
-            return AlertDialog(
-              title: Text("Set youtube url"),
-              content: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-                child: TextField(
-                  controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  textInputAction: TextInputAction.done,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    labelText: "Youtube url",
-                  ),
-                ),
-              ),
-              actions: [
-                if (_cubit.property.youtubeUrl.isNotEmpty) ...[
-                  TextButton(
-                    onPressed: () {
-                      _launchYouTubeVideo(_cubit.property.youtubeUrl);
-                      Navigator.of(context).pop(false); // Close the dialog
-                    },
-                    child: Text("Play"),
-                  ),
-                ],
-                ElevatedButton(
-                  onPressed: () {
-                    if (_cubit.setYoutubeUrl(youtubeUrl: controller.text)) {
-                      setState(() {});
-                    }
-                    Navigator.of(context).pop(true); // Close the dialog
-                  },
-                  child: Text("Update"),
-                ),
-              ],
-            );
-          },
-        );
-
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -283,18 +79,6 @@ class _PropertyPageState extends State<PropertyPage> {
         appBar: AppBar(
           title: Text(_cubit.property.address),
           centerTitle: true,
-          actions: <Widget>[
-            PopupMenuButton<int>(
-              onSelected: (item) => handleClick(item),
-              itemBuilder: (context) => [
-                PopupMenuItem<int>(value: 0, child: Text('Finished')),
-                PopupMenuItem<int>(value: 1, child: Text('Actual hours')),
-                PopupMenuItem<int>(value: 2, child: Text('Actual woolsacks')),
-                PopupMenuItem<int>(value: 3, child: Text('Location')),
-                PopupMenuItem<int>(value: 4, child: Text('Youtube')),
-              ],
-            ),
-          ],
         ),
         body: Stack(
           children: [
@@ -370,7 +154,7 @@ class _PropertyPageState extends State<PropertyPage> {
                           Expanded(
                             flex: 5,
                             child: LeftRightItem(
-                              leftText: "Est/Hours Spent",
+                              leftText: "Est/Hrs",
                               rightText: _cubit.property.hoursConcatenatedString,
                             ),
                           ),
@@ -392,7 +176,7 @@ class _PropertyPageState extends State<PropertyPage> {
                           Expanded(
                             flex: 5,
                             child: LeftRightItem(
-                              leftText: "Est/Woolsacks",
+                              leftText: "Est/WoolSacks",
                               rightText: _cubit.property.woolsacksConcatenatedString,
                             ),
                           ),
@@ -471,11 +255,11 @@ class _PropertyPageState extends State<PropertyPage> {
                                           child: Text("Cancel"),
                                         ),
                                         ElevatedButton(
-                                          onPressed: () {
-                                            if (_cubit.completeJob(job, controller.text)) {
+                                          onPressed: () async {
+                                            if (await _cubit.completeJob(job, controller.text)) {
+                                              Navigator.of(context).pop(true); // Close the dialog
                                               setState(() {});
                                             }
-                                            Navigator.of(context).pop(true); // Close the dialog
                                           },
                                           child: Text("Update"),
                                         ),
@@ -541,194 +325,331 @@ class _PropertyPageState extends State<PropertyPage> {
                       ),
                     ),
                     Divider(),
-                    Text(
-                      "Media",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    GridView.builder(
-                      shrinkWrap: true, // Makes the GridView take only as much height as its children
-                      physics: NeverScrollableScrollPhysics(), // Disables scrolling
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Two columns
-                      ),
-                      itemCount: _cubit.property.photos.isEmpty ? 2 : _cubit.property.photos.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        MediaItem? item;
-                        if (index < _cubit.property.photos.length) {
-                          item = _cubit.property.photos[index];
-                        }
-                        return Container(
-                          margin: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blueGrey,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.black, width: 2),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            "Media",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
-                          child: item == null || item.path.isEmpty
-                              ? Center(
-                                  child: IconButton(
-                                    onPressed: () async {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          TextEditingController controller = TextEditingController(
-                                              text: false
-                                                  ? "https://drive.google.com/file/d/18aYI5EHJ0WeAHVcnt31mZlce-b_L5JU6/view?usp=drive_link"
-                                                  : item?.path);
-                                          return AlertDialog(
-                                            title: Text("Add Media"),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-                                                  child: TextField(
-                                                    controller: controller,
-                                                    textInputAction: TextInputAction.done,
-                                                    decoration: InputDecoration(
-                                                      labelText: "Media url",
+                        ),
+                        Expanded(
+                          child: IconButton(
+                            icon: Icon(Icons.play_circle),
+                            onPressed: () {
+                              if (_cubit.property.youtubeUrl.isNotEmpty) {
+                                _launchYouTubeVideo(_cubit.property.youtubeUrl);
+                              }
+                            },
+                            color: _cubit.property.youtubeUrl.isEmpty ? Colors.grey : Theme.of(context).primaryColor,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.of(context)
+                                  .push(
+                                MaterialPageRoute(
+                                  builder: (context) => SelectFromDrive(
+                                    propertyName: _cubit.property.address,
+                                    media: _cubit.property.photos,
+                                  ),
+                                ),
+                              )
+                                  .then((value) {
+                                if (value is List<DriveItem>) {
+                                  setState(() {
+                                    _cubit.updateMedia(value);
+                                  });
+                                }
+                              });
+                            },
+                            child: Text(
+                              "Edit/Add",
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 48),
+                      child: GridView.builder(
+                        shrinkWrap: true, // Makes the GridView take only as much height as its children
+                        physics: NeverScrollableScrollPhysics(), // Disables scrolling
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2, // Two columns
+                        ),
+                        itemCount: _cubit.property.photos.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          if (_cubit.property.photos.isEmpty) {
+                            return Container();
+                          }
+                          MediaItem? item;
+                          if (index < _cubit.property.photos.length) {
+                            item = _cubit.property.photos[index];
+                          }
+
+                          return Container(
+                            margin: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blueGrey,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.black, width: 2),
+                            ),
+                            child: GestureDetector(
+                              onTap: () {
+                                _imageStreamController.add(index);
+                                showDialog(
+                                  barrierColor: const Color.fromARGB(255, 41, 40, 40),
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(0.0),
+                                        side: const BorderSide(color: Colors.black, width: 1),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(0.0),
+                                        child: GestureDetector(
+                                          onHorizontalDragEnd: (dragEndDetails) {
+                                            if ((dragEndDetails.primaryVelocity ?? 0) < 0) {
+                                              if (_currentImageIndexNotifier.value < _cubit.property.photos.length - 1) {
+                                                _imageStreamController.add(_currentImageIndexNotifier.value + 1);
+                                              }
+                                            } else if ((dragEndDetails.primaryVelocity ?? 0) > 0) {
+                                              if (_currentImageIndexNotifier.value > 0) {
+                                                _imageStreamController.add(_currentImageIndexNotifier.value - 1);
+                                              }
+                                            }
+                                          },
+                                          child: ValueListenableBuilder<int>(
+                                            valueListenable: _currentImageIndexNotifier,
+                                            builder: (context, value, child) {
+                                              return AnimatedSwitcher(
+                                                duration: const Duration(milliseconds: 300),
+                                                transitionBuilder: (Widget child, Animation<double> animation) {
+                                                  return FadeTransition(
+                                                    opacity: animation,
+                                                    child: child,
+                                                  );
+                                                },
+                                                child: CachedNetworkImage(
+                                                  key: ValueKey<int>(value),
+                                                  imageUrl: _cubit.property.photos[value].path,
+                                                  placeholder: (context, url) => const Center(
+                                                    child: SizedBox(
+                                                      width: 40,
+                                                      height: 40,
+                                                      child: CircularProgressIndicator.adaptive(),
                                                     ),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop(false); // Close the dialog
-                                                },
-                                                child: Text("Cancel"),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  if (_cubit.addMedia(
-                                                    index: index,
-                                                    mediaUrl: controller.text,
-                                                    // heicUrl: heicController.text,
-                                                  )) {
-                                                    if (index == _cubit.property.photos.length - 2) {
-                                                      // Add two new items to the photos array
-                                                      _cubit.property.photos.add(MediaItem(id: _cubit.property.photos.length, path: ""));
-                                                      _cubit.property.photos.add(MediaItem(id: _cubit.property.photos.length, path: ""));
-                                                    }
-                                                    setState(() {});
-                                                  }
-
-                                                  Navigator.of(context).pop(true); // Close the dialog
-                                                },
-                                                child: Text("Add"),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                    icon: Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                      size: 40,
-                                    ),
-                                  ),
-                                )
-                              : GestureDetector(
-                                  onTap: () {
-                                    _imageStreamController.add(index);
-                                    showDialog(
-                                      barrierColor: const Color.fromARGB(255, 41, 40, 40),
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return Dialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(0.0),
-                                            side: const BorderSide(color: Colors.black, width: 1),
+                                              );
+                                            },
                                           ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(0.0),
-                                            child: GestureDetector(
-                                              onHorizontalDragEnd: (dragEndDetails) {
-                                                if ((dragEndDetails.primaryVelocity ?? 0) < 0) {
-                                                  if (_currentImageIndexNotifier.value < _cubit.property.photos.length - 3) {
-                                                    _imageStreamController.add(_currentImageIndexNotifier.value + 1);
-                                                  }
-                                                } else if ((dragEndDetails.primaryVelocity ?? 0) > 0) {
-                                                  if (_currentImageIndexNotifier.value > 0) {
-                                                    _imageStreamController.add(_currentImageIndexNotifier.value - 1);
-                                                  }
-                                                }
-                                              },
-                                              child: ValueListenableBuilder<int>(
-                                                valueListenable: _currentImageIndexNotifier,
-                                                builder: (context, value, child) {
-                                                  return AnimatedSwitcher(
-                                                    duration: const Duration(milliseconds: 300),
-                                                    transitionBuilder: (Widget child, Animation<double> animation) {
-                                                      return FadeTransition(
-                                                        opacity: animation,
-                                                        child: child,
-                                                      );
-                                                    },
-                                                    child: CachedNetworkImage(
-                                                      key: ValueKey<int>(value),
-                                                      imageUrl: _cubit.property.photos[value].path,
-                                                      placeholder: (context, url) => const Center(
-                                                        child: SizedBox(
-                                                          width: 40,
-                                                          height: 40,
-                                                          child: CircularProgressIndicator.adaptive(),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                        ),
+                                      ),
                                     );
                                   },
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      CachedNetworkImage(
-                                          imageUrl: item.path,
-                                          progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
-                                                width: 12,
-                                                height: 12,
-                                                child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
-                                              ),
-                                          errorWidget: (context, url, error) {
-                                            return Icon(Icons.error);
-                                          }),
-                                      Align(
-                                        alignment: Alignment.topRight,
-                                        child: IconButton(
-                                          onPressed: () {
-                                            if (_cubit.deleteMedia(index: index)) {
-                                              setState(() {});
-                                            }
-                                          },
-                                          icon: Icon(Icons.delete, color: const Color.fromARGB(255, 220, 67, 56)),
-                                        ),
-                                      ),
-                                      Align(
-                                        alignment: Alignment.topLeft,
-                                        child: IconButton(
-                                          onPressed: () {
-                                            if (_cubit.swapMedia(index: index)) {
-                                              setState(() {});
-                                            }
-                                          },
-                                          icon: Icon(Icons.swap_horiz, color: Colors.white),
-                                        ),
-                                      ),
-                                    ],
+                                );
+                              },
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  CachedNetworkImage(
+                                      imageUrl: item!.path,
+                                      progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
+                                          ),
+                                      errorWidget: (context, url, error) {
+                                        return Icon(Icons.error);
+                                      }),
+                                  Align(
+                                    alignment: Alignment.topRight,
+                                    child: IconButton(
+                                      onPressed: () {
+                                        if (_cubit.deleteMedia(index: index)) {
+                                          setState(() {});
+                                        }
+                                      },
+                                      icon: Icon(Icons.delete, color: const Color.fromARGB(255, 220, 67, 56)),
+                                    ),
                                   ),
-                                ),
-                        );
-                      },
+                                  if (index == 0) ...[
+                                    Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.downwards)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_vert, color: Colors.white),
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.leftToRight)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                  if (index == 1) ...[
+                                    Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.downwards)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_vert, color: Colors.white),
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.rightToLeft)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                  if (index == _cubit.property.photos.length - 1) ...[
+                                    Align(
+                                      alignment: Alignment.topCenter,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.upwards)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_vert, color: Colors.white),
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.rightToLeft)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                  if (index == _cubit.property.photos.length - 2) ...[
+                                    Align(
+                                      alignment: Alignment.topCenter,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.upwards)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_vert, color: Colors.white),
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.leftToRight)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                  if (index % 2 == 0 &&
+                                      index != 0 &&
+                                      index != 1 &&
+                                      index != _cubit.property.photos.length - 1 &&
+                                      index != _cubit.property.photos.length - 2) ...[
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.leftToRight)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                  if (index % 2 == 1 &&
+                                      index != 0 &&
+                                      index != 1 &&
+                                      index != _cubit.property.photos.length - 1 &&
+                                      index != _cubit.property.photos.length - 2) ...[
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.rightToLeft)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                  if (index != 0 &&
+                                      index != 1 &&
+                                      index != _cubit.property.photos.length - 1 &&
+                                      index != _cubit.property.photos.length - 2) ...[
+                                    Align(
+                                      alignment: Alignment.topCenter,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.upwards)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_vert, color: Colors.white),
+                                      ),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          if (_cubit.swapMedia(index: index, swapType: SwapType.downwards)) {
+                                            setState(() {});
+                                          }
+                                        },
+                                        icon: Icon(Icons.swap_vert, color: Colors.white),
+                                      ),
+                                    ),
+                                  ]
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
