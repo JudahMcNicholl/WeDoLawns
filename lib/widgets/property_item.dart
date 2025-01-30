@@ -23,22 +23,24 @@ class PropertyItem extends StatelessWidget {
       },
       child: Slidable(
         key: const ValueKey(0),
-        endActionPane: ActionPane(
-          extentRatio: 0.3,
-          motion: const ScrollMotion(),
-          dismissible: DismissiblePane(onDismissed: () {}),
-          children: [
-            SlidableAction(
-              onPressed: (v) {
-                onDelete();
-              },
-              backgroundColor: Color(0xFFFE4A49),
-              foregroundColor: Colors.white,
-              icon: Icons.delete,
-              label: 'Delete',
-            ),
-          ],
-        ),
+        endActionPane: !property.isComplete
+            ? ActionPane(
+                extentRatio: 0.3,
+                motion: const ScrollMotion(),
+                dismissible: DismissiblePane(onDismissed: () {}),
+                children: [
+                  SlidableAction(
+                    onPressed: (v) {
+                      onDelete();
+                    },
+                    backgroundColor: Color(0xFFFE4A49),
+                    foregroundColor: Colors.white,
+                    icon: Icons.delete,
+                    label: 'Delete',
+                  ),
+                ],
+              )
+            : null,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
           child: Container(

@@ -140,20 +140,55 @@ class PropertyCubit extends Cubit<PropertyState> {
     return true;
   }
 
-  updateMedia(List<DriveItem> value) {
-    List<DriveItem> removed = value.where((e) => !e.isSelected && property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle).toList();
-    List<DriveItem> added = value.where((e) => e.isSelected && !property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle).toList();
+  updateMedia(List<List<DriveItem>> value) async {
+    List<List<DriveItem>> removed = value
+        .where((group) => group.any((e) => !e.isSelected && property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle))
+        .toList(); // Keep the entire group if at least one was removed
+
+    List<List<DriveItem>> added = value
+        .where((group) => group.any((e) => e.isSelected && !property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle))
+        .toList(); // Keep the entire group if at least one was added
+
     // List<DriveItem> kept = value.where((e) => property.photos.any((v) => v.path.contains(e.id)) && !e.isTitle).toList();
-    for (DriveItem item in removed) {
-      int indexOf = property.photos.indexWhere((e) => e.path.contains(item.id));
-      if (indexOf != -1) {
-        deleteMedia(index: indexOf);
+    for (List<DriveItem> item in removed) {
+      DriveItem? first = item.isNotEmpty ? item[0] : null;
+      DriveItem? second = item.length > 1 ? item[1] : null;
+      if (first != null && !first.isSelected && second != null && !second.isSelected) {
+        int indexOf = property.photos.indexWhere((e) => e.path.contains(first.path) || e.path.contains(second.path));
+        if (indexOf != -1) {
+          deleteMedia(index: indexOf);
+        }
       }
     }
-    for (DriveItem item in added) {
-      property.photos.add(
-        MediaItem(id: property.photos.length, path: item.path),
-      );
+    for (List<DriveItem> item in added) {
+      DriveItem? first = item.isNotEmpty ? item[0] : null;
+      DriveItem? second = item.length > 1 ? item[1] : null;
+      int indexOf = property.photos.indexWhere((e) => e.path.contains(first?.id ?? "") || (second != null && e.path.contains(second.id)));
+      MediaItem mediaItem = MediaItem(id: property.photos.length, path: "");
+      if (indexOf != -1) {
+        mediaItem = property.photos[indexOf];
+      }
+      if (first != null) {
+        if (first.mimeType == "image/heif") {
+          mediaItem.path = first.path;
+        } else {
+          mediaItem.androidPath = first.path;
+        }
+      }
+      if (second != null) {
+        if (second.mimeType == "image/heif") {
+          mediaItem.path = second.path;
+        } else {
+          mediaItem.androidPath = second.path;
+        }
+      }
+      if (indexOf == -1) {
+        property.photos.add(
+          mediaItem,
+        );
+      }
     }
+
+    await _collectionRef.doc(property.id).set(property);
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,6 +10,7 @@ import 'package:wedolawns/objects/property.dart';
 import 'package:wedolawns/widgets/add_job_dialog.dart';
 import 'package:wedolawns/widgets/color_key.dart';
 import 'package:wedolawns/widgets/edit_job_dialog.dart';
+import 'package:wedolawns/widgets/image_grid.dart';
 import 'package:wedolawns/widgets/job_item.dart';
 import 'package:wedolawns/widgets/left_right_item.dart';
 import 'package:wedolawns/widgets/select_from_drive.dart';
@@ -53,6 +53,7 @@ class _PropertyPageState extends State<PropertyPage> {
   late PropertyCubit _cubit;
   late ValueNotifier<int> _currentImageIndexNotifier;
   late StreamController<int> _imageStreamController;
+  final GlobalKey<ImageGridState> _imageGridState = GlobalKey();
 
   @override
   void initState() {
@@ -87,7 +88,7 @@ class _PropertyPageState extends State<PropertyPage> {
               child: SingleChildScrollView(
                 clipBehavior: Clip.antiAlias,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
@@ -183,6 +184,87 @@ class _PropertyPageState extends State<PropertyPage> {
                         ],
                       ),
                     ),
+                    Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            "Media",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: IconButton(
+                            icon: Icon(Icons.play_circle),
+                            onPressed: () {
+                              if (_cubit.property.youtubeUrl.isNotEmpty) {
+                                _launchYouTubeVideo(_cubit.property.youtubeUrl);
+                              }
+                            },
+                            color: _cubit.property.youtubeUrl.isEmpty ? Colors.grey : Theme.of(context).primaryColor,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.of(context)
+                                  .push(
+                                MaterialPageRoute(
+                                  builder: (context) => SelectFromDrive(
+                                    propertyName: _cubit.property.address,
+                                    media: _cubit.property.photos,
+                                  ),
+                                ),
+                              )
+                                  .then((value) {
+                                if (value is List<List<DriveItem>>) {
+                                  setState(() {
+                                    _cubit.updateMedia(value);
+                                  });
+                                }
+                              });
+                            },
+                            child: Text(
+                              "Edit/Add",
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                          return Scaffold(
+                            appBar: AppBar(
+                              title: Text("Media (${_cubit.property.photos.length})"),
+                              centerTitle: true,
+                            ),
+                            body: ImageGrid(
+                              key: _imageGridState,
+                              photos: _cubit.property.photos,
+                              deleteMedia: (index) {
+                                return _cubit.deleteMedia(index: index);
+                              },
+                              swapMedia: (index, type) {
+                                return _cubit.swapMedia(index: index, swapType: type);
+                              },
+                            ),
+                          );
+                        }));
+                      },
+                      child: Text("View Media"),
+                    ),
+                    Divider(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -218,11 +300,13 @@ class _PropertyPageState extends State<PropertyPage> {
                         ),
                       ],
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(
-                        _cubit.property.jobs.length,
-                        (index) {
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 148),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: _cubit.property.jobs.length,
+                        itemBuilder: (BuildContext context, int index) {
                           Job job = _cubit.property.jobs[index];
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(0, 0, 0, 2),
@@ -319,333 +403,6 @@ class _PropertyPageState extends State<PropertyPage> {
                                   },
                                 );
                               },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            "Media",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: IconButton(
-                            icon: Icon(Icons.play_circle),
-                            onPressed: () {
-                              if (_cubit.property.youtubeUrl.isNotEmpty) {
-                                _launchYouTubeVideo(_cubit.property.youtubeUrl);
-                              }
-                            },
-                            color: _cubit.property.youtubeUrl.isEmpty ? Colors.grey : Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.of(context)
-                                  .push(
-                                MaterialPageRoute(
-                                  builder: (context) => SelectFromDrive(
-                                    propertyName: _cubit.property.address,
-                                    media: _cubit.property.photos,
-                                  ),
-                                ),
-                              )
-                                  .then((value) {
-                                if (value is List<DriveItem>) {
-                                  setState(() {
-                                    _cubit.updateMedia(value);
-                                  });
-                                }
-                              });
-                            },
-                            child: Text(
-                              "Edit/Add",
-                              textAlign: TextAlign.end,
-                              style: TextStyle(
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 48),
-                      child: GridView.builder(
-                        shrinkWrap: true, // Makes the GridView take only as much height as its children
-                        physics: NeverScrollableScrollPhysics(), // Disables scrolling
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2, // Two columns
-                        ),
-                        itemCount: _cubit.property.photos.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          if (_cubit.property.photos.isEmpty) {
-                            return Container();
-                          }
-                          MediaItem? item;
-                          if (index < _cubit.property.photos.length) {
-                            item = _cubit.property.photos[index];
-                          }
-
-                          return Container(
-                            margin: EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.blueGrey,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.black, width: 2),
-                            ),
-                            child: GestureDetector(
-                              onTap: () {
-                                _imageStreamController.add(index);
-                                showDialog(
-                                  barrierColor: const Color.fromARGB(255, 41, 40, 40),
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return Dialog(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(0.0),
-                                        side: const BorderSide(color: Colors.black, width: 1),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(0.0),
-                                        child: GestureDetector(
-                                          onHorizontalDragEnd: (dragEndDetails) {
-                                            if ((dragEndDetails.primaryVelocity ?? 0) < 0) {
-                                              if (_currentImageIndexNotifier.value < _cubit.property.photos.length - 1) {
-                                                _imageStreamController.add(_currentImageIndexNotifier.value + 1);
-                                              }
-                                            } else if ((dragEndDetails.primaryVelocity ?? 0) > 0) {
-                                              if (_currentImageIndexNotifier.value > 0) {
-                                                _imageStreamController.add(_currentImageIndexNotifier.value - 1);
-                                              }
-                                            }
-                                          },
-                                          child: ValueListenableBuilder<int>(
-                                            valueListenable: _currentImageIndexNotifier,
-                                            builder: (context, value, child) {
-                                              return AnimatedSwitcher(
-                                                duration: const Duration(milliseconds: 300),
-                                                transitionBuilder: (Widget child, Animation<double> animation) {
-                                                  return FadeTransition(
-                                                    opacity: animation,
-                                                    child: child,
-                                                  );
-                                                },
-                                                child: CachedNetworkImage(
-                                                  key: ValueKey<int>(value),
-                                                  imageUrl: _cubit.property.photos[value].path,
-                                                  placeholder: (context, url) => const Center(
-                                                    child: SizedBox(
-                                                      width: 40,
-                                                      height: 40,
-                                                      child: CircularProgressIndicator.adaptive(),
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  CachedNetworkImage(
-                                      imageUrl: item!.path,
-                                      progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
-                                            width: 12,
-                                            height: 12,
-                                            child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
-                                          ),
-                                      errorWidget: (context, url, error) {
-                                        return Icon(Icons.error);
-                                      }),
-                                  Align(
-                                    alignment: Alignment.topRight,
-                                    child: IconButton(
-                                      onPressed: () {
-                                        if (_cubit.deleteMedia(index: index)) {
-                                          setState(() {});
-                                        }
-                                      },
-                                      icon: Icon(Icons.delete, color: const Color.fromARGB(255, 220, 67, 56)),
-                                    ),
-                                  ),
-                                  if (index == 0) ...[
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.downwards)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_vert, color: Colors.white),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.leftToRight)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                  if (index == 1) ...[
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.downwards)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_vert, color: Colors.white),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.rightToLeft)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                  if (index == _cubit.property.photos.length - 1) ...[
-                                    Align(
-                                      alignment: Alignment.topCenter,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.upwards)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_vert, color: Colors.white),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.rightToLeft)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                  if (index == _cubit.property.photos.length - 2) ...[
-                                    Align(
-                                      alignment: Alignment.topCenter,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.upwards)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_vert, color: Colors.white),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.leftToRight)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                  if (index % 2 == 0 &&
-                                      index != 0 &&
-                                      index != 1 &&
-                                      index != _cubit.property.photos.length - 1 &&
-                                      index != _cubit.property.photos.length - 2) ...[
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.leftToRight)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                  if (index % 2 == 1 &&
-                                      index != 0 &&
-                                      index != 1 &&
-                                      index != _cubit.property.photos.length - 1 &&
-                                      index != _cubit.property.photos.length - 2) ...[
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.rightToLeft)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_horiz, color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                  if (index != 0 &&
-                                      index != 1 &&
-                                      index != _cubit.property.photos.length - 1 &&
-                                      index != _cubit.property.photos.length - 2) ...[
-                                    Align(
-                                      alignment: Alignment.topCenter,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.upwards)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_vert, color: Colors.white),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (_cubit.swapMedia(index: index, swapType: SwapType.downwards)) {
-                                            setState(() {});
-                                          }
-                                        },
-                                        icon: Icon(Icons.swap_vert, color: Colors.white),
-                                      ),
-                                    ),
-                                  ]
-                                ],
-                              ),
                             ),
                           );
                         },

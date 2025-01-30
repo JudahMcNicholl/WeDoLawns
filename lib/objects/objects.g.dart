@@ -9,11 +9,13 @@ part of 'objects.dart';
 MediaItem _$MediaItemFromJson(Map<String, dynamic> json) => MediaItem(
       id: (json['Id'] as num).toInt(),
       path: json['Path'] as String,
+      androidPath: json['AndroidPath'] as String? ?? '',
     );
 
 Map<String, dynamic> _$MediaItemToJson(MediaItem instance) => <String, dynamic>{
       'Id': instance.id,
       'Path': instance.path,
+      'AndroidPath': instance.androidPath,
     };
 
 Job _$JobFromJson(Map<String, dynamic> json) => Job(

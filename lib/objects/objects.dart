@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'objects.g.dart';
@@ -9,9 +11,23 @@ class MediaItem {
   @JsonKey(name: "Path") //https://drive.google.com/drive/folders/1e3w96UxWVK_Sdbc19MAV5UoaF4ZURi98?usp=share_link
   String path;
 
+  @JsonKey(name: "AndroidPath", defaultValue: "")
+  String androidPath;
+
+  String get pathByPlatform {
+    if (Platform.isIOS) {
+      if (path.isNotEmpty) return path;
+      return androidPath;
+    } else {
+      if (androidPath.isNotEmpty) return androidPath;
+      return path;
+    }
+  }
+
   MediaItem({
     required this.id,
     required this.path,
+    this.androidPath = "",
   });
 
   factory MediaItem.fromJson(Map<String, dynamic> json) => _$MediaItemFromJson(json);

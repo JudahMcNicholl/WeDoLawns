@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,7 +23,7 @@ class SelectFromDrive extends StatefulWidget {
 }
 
 class _SelectFromDriveState extends State<SelectFromDrive> {
-  final List<DriveItem> _driveItems = [];
+  final List<List<DriveItem>> _driveItems = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,58 +46,100 @@ class _SelectFromDriveState extends State<SelectFromDrive> {
                   return CircularProgressIndicator.adaptive();
                 }
                 if (snapshot.hasData) {
-                  List<DriveItem> data = snapshot.data!; // Assuming snapshot data is of type Map<String, List<dynamic>>
-
-                  // Flatten the map structure
                   List<Widget> children = [];
-                  if (data.isEmpty) {
+
+                  if (_driveItems.isEmpty) {
                     children.add(Text("No data"));
                   } else {
-                    for (DriveItem driveItem in data) {
-                      if (driveItem.isTitle) {
-                        children.add(ListTile(
-                          title: Text(driveItem.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                          leading: Checkbox(
-                              value: driveItem.isSelected,
-                              onChanged: (v) {
-                                setState(() {
-                                  driveItem.isSelected = !driveItem.isSelected;
-                                  int indexOf = data.indexOf(driveItem);
-                                  while (indexOf + 1 < data.length) {
-                                    indexOf += 1;
-                                    DriveItem i = data[indexOf];
-                                    if (!i.isTitle) {
-                                      data[indexOf].isSelected = driveItem.isSelected;
-                                    } else {
-                                      break;
-                                    }
-                                  }
-                                });
-                              }),
-                        ));
-                        // children.add(Text(, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)));
-                      } else {
-                        children.add(ListTile(
-                          leading: Checkbox(
-                              value: driveItem.isSelected,
-                              onChanged: (v) {
-                                setState(() {
-                                  driveItem.isSelected = !driveItem.isSelected;
-                                });
-                              }),
-                          trailing: CachedNetworkImage(
-                              imageUrl: driveItem.path,
-                              progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
-                                    width: 12,
-                                    height: 12,
-                                    child: CircularProgressIndicator.adaptive(value: downloadProgress.progress),
+                    for (var (index, group) in _driveItems.indexed) {
+                      if (group.length == 2) {
+                        // If we have a matched pair, display in a Row
+                        children.add(
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: group.map((driveItem) {
+                              return Expanded(
+                                child: ListTile(
+                                  leading: Checkbox(
+                                    value: driveItem.isSelected,
+                                    onChanged: (v) {
+                                      setState(() {
+                                        driveItem.isSelected = !driveItem.isSelected;
+                                        driveItem.isSelected = driveItem.isSelected;
+                                      });
+                                    },
                                   ),
-                              errorWidget: (context, url, error) {
-                                return Icon(Icons.error);
-                              }),
-                          title: Text(driveItem.name),
-                          subtitle: Text(driveItem.id),
-                        ));
+                                  title: Platform.isIOS || driveItem.mimeType != "image/heic"
+                                      ? CachedNetworkImage(
+                                          imageUrl: driveItem.path,
+                                          progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
+                                              width: 12,
+                                              height: 12,
+                                              child: CircularProgressIndicator.adaptive(value: downloadProgress.progress)),
+                                          errorWidget: (context, url, error) => Icon(Icons.error),
+                                        )
+                                      : Container(),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        );
+                      } else {
+                        // Single items are displayed normally
+                        DriveItem driveItem = group.first;
+                        if (driveItem.isTitle) {
+                          children.add(ListTile(
+                            title: Text(driveItem.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            leading: Checkbox(
+                                value: driveItem.isSelected,
+                                onChanged: (v) {
+                                  setState(() {
+                                    driveItem.isSelected = !driveItem.isSelected;
+                                    int indexOf = index;
+                                    while (indexOf + 1 < _driveItems.length) {
+                                      indexOf += 1;
+                                      List<DriveItem> i = _driveItems[indexOf];
+                                      if (!i[0].isTitle) {
+                                        i[0].isSelected = driveItem.isSelected;
+                                        if (i.length > 1) {
+                                          i[1].isSelected = driveItem.isSelected;
+                                        }
+                                      } else {
+                                        break;
+                                      }
+                                    }
+                                  });
+                                }),
+                          ));
+                        } else {
+                          children.add(
+                            ListTile(
+                              leading: Checkbox(
+                                value: driveItem.isSelected,
+                                onChanged: (v) {
+                                  setState(() {
+                                    driveItem.isSelected = !driveItem.isSelected;
+                                  });
+                                },
+                              ),
+                              title: CachedNetworkImage(
+                                  imageUrl: driveItem.path,
+                                  progressIndicatorBuilder: (context, url, downloadProgress) => SizedBox(
+                                      width: 12, height: 12, child: CircularProgressIndicator.adaptive(value: downloadProgress.progress)),
+                                  errorWidget: (context, url, error) => Icon(Icons.error),
+                                  imageBuilder: (context, imageProvider) {
+                                    return SizedBox(
+                                      width: 52, // Set your desired width
+                                      height: 100, // Set your desired height
+                                      child: Image(
+                                        image: imageProvider,
+                                        // fit: BoxFit.cover, // Adjust fit as needed (cover, contain, fill, etc.)
+                                      ),
+                                    );
+                                  }),
+                            ),
+                          );
+                        }
                       }
                     }
                   }
@@ -140,8 +183,9 @@ class _SelectFromDriveState extends State<SelectFromDrive> {
     }
   }
 
-  Future<List<DriveItem>> _authenticateAndFetchFiles() async {
+  Future<List<List<DriveItem>>> _authenticateAndFetchFiles() async {
     _driveItems.clear();
+    List<DriveItem> innerDriveItems = [];
     // Authenticate the user
     GoogleSignInAccount? account = GSign.instance.googleSignIn.currentUser;
     if (GSign.instance.googleSignIn.currentUser == null) {
@@ -168,24 +212,41 @@ class _SelectFromDriveState extends State<SelectFromDrive> {
     );
     for (var file in files) {
       String fileId = file['id'];
-      _driveItems.add(DriveItem(id: "-", name: file["name"], path: "", isTitle: true));
+      innerDriveItems.add(DriveItem(id: "-", name: file["name"], path: "", isTitle: true, mimeType: ""));
 
       var innerFiles = await fetchFromDrive(
         accessToken: accessToken,
         queryParameters: {
           'q': "'$fileId' in parents", // Get all files in the folder
-          'fields': 'files(id, name, webContentLink)',
+          'fields': 'files(id, name, webContentLink, mimeType)',
         },
       );
 
       for (var item in innerFiles) {
+        log(item["name"]);
         String id = item["id"];
         DriveItem driveItem = DriveItem(
-            id: item["id"], name: item["name"], path: item["webContentLink"], isSelected: widget.media.any((e) => e.path.contains(id)));
-        _driveItems.add(driveItem);
+            id: item["id"],
+            name: item["name"],
+            path: item["webContentLink"],
+            isSelected: widget.media.any((e) => e.path.contains(id) || e.androidPath.contains(id)),
+            mimeType: item["mimeType"]);
+        innerDriveItems.add(driveItem);
       }
     }
+    Map<String, List<DriveItem>> groupedItems = {};
 
-    return _driveItems;
+    for (var item in innerDriveItems) {
+      // Extract base name without extension
+      String baseName = item.name.replaceAll(RegExp(r'\.\w+$'), '');
+
+      // Add to the map
+      groupedItems.putIfAbsent(baseName, () => []).add(item);
+    }
+
+    // Convert map values into a list of lists
+    List<List<DriveItem>> marriedDriveItems = groupedItems.values.toList();
+    _driveItems.addAll(marriedDriveItems);
+    return marriedDriveItems;
   }
 }

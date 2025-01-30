@@ -449,7 +449,7 @@ class _PropertyEditPageState extends State<PropertyEditPage> {
                                   textCapitalization: TextCapitalization.sentences,
                                   textInputAction: TextInputAction.done,
                                   onChanged: (value) {
-                                    _cubit.property.address = value;
+                                    _cubit.property.youtubeUrl = value;
                                   },
                                   decoration: InputDecoration(
                                     labelText: "Youtube url",
